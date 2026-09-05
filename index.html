@@ -3,12 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hệ Thống Quản Lý Lớp Học & Sổ Điểm Điện Tử</title>
+  <title>Sổ Điểm Điện Tử & Quản Lý Lớp Học</title>
 
-  <!-- React 18, ReactDOM, Babel Standalone -->
+  <!-- React 18 & ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- SheetJS (XLSX) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -19,91 +22,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <style>
-    :root {
-      --primary: #1e40af;
-      --primary-dark: #1e3a8a;
-      --primary-light: #eff6ff;
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --border: #cbd5e1;
-      --text: #0f172a;
-      --text-muted: #64748b;
-      --danger: #dc2626;
-      --success: #16a34a;
-      --warning: #d97706;
-      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 60px; }
-
-    header { background-color: var(--primary); color: white; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-md); flex-wrap: wrap; gap: 10px; }
-    header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.02em; }
-    .header-actions { display: flex; align-items: center; gap: 12px; }
-
-    .nav-bar { background-color: #ffffff; border-bottom: 1px solid var(--border); display: flex; overflow-x: auto; padding: 0 16px; box-shadow: var(--shadow-sm); }
-    .nav-bar button { background: none; border: none; padding: 14px 18px; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; transition: all 0.2s; }
-    .nav-bar button:hover { color: var(--primary); }
-    .nav-bar button.active { color: var(--primary); border-bottom-color: var(--primary); }
-
-    .sub-bar { background: #f1f5f9; padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
-    .sub-bar-group { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; }
-
-    .container { max-width: 1340px; margin: 24px auto; padding: 0 16px; }
-    .card { background-color: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
-    .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 16px; color: var(--primary); border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-
-    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
-
-    .form-group { margin-bottom: 14px; }
-    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #334155; }
-    .form-control { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; transition: border-color 0.2s; background: #ffffff; }
-    .form-control:focus { outline: none; border-color: var(--primary); }
-    textarea.form-control { resize: vertical; min-height: 90px; }
-
-    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 8px 16px; font-size: 0.85rem; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; transition: 0.2s; gap: 6px; }
-    .btn-primary { background-color: var(--primary); color: white; }
-    .btn-primary:hover { background-color: var(--primary-dark); }
-    .btn-danger { background-color: var(--danger); color: white; }
-    .btn-danger:hover { background-color: #b91c1c; }
-    .btn-success { background-color: var(--success); color: white; }
-    .btn-success:hover { background-color: #15803d; }
-    .btn-warning { background-color: var(--warning); color: white; }
-    .btn-warning:hover { background-color: #b45309; }
-    .btn-secondary { background-color: #64748b; color: white; }
-    .btn-secondary:hover { background-color: #475569; }
-    .btn-outline { background-color: transparent; border: 1px solid var(--border); color: var(--text); }
-    .btn-outline:hover { background-color: #f1f5f9; }
-    .btn-sm { padding: 5px 10px; font-size: 0.78rem; }
-
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
-    table th, table td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; }
-    table th { background-color: #f8fafc; font-weight: 600; color: #334155; }
-    table tr:nth-child(even) { background-color: #fdfdfe; }
-    table tr:hover { background-color: #f1f5f9; }
-
-    .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
-    .badge-primary { background-color: #dbeafe; color: #1e40af; }
-    .badge-success { background-color: #dcfce7; color: #166534; }
-    .badge-danger { background-color: #fee2e2; color: #991b1b; }
-    .badge-warning { background-color: #fef3c7; color: #92400e; }
-
-    .modal-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; backdrop-filter: blur(2px); }
-    .modal-box { background-color: white; border-radius: 10px; max-width: 860px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-    .modal-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted); }
-
-    .random-box { background: var(--primary-light); border: 2px dashed #3b82f6; border-radius: 8px; padding: 16px; text-align: center; }
-    .random-num { font-size: 1.8rem; font-weight: 800; color: var(--primary); }
-    .random-name { font-size: 1.1rem; font-weight: 700; margin-top: 4px; }
-    .text-center { text-align: center; }
-    .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 6px; }
-    .toast-msg { padding: 8px 14px; border-radius: 6px; margin-bottom: 12px; font-size: 0.85rem; font-weight: 600; }
-    .toast-success { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
-    .toast-error { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f8fafc; color: #0f172a; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body>
@@ -118,17 +39,18 @@
       projectId: "sodiemonline",
       storageBucket: "sodiemonline.firebasestorage.app",
       messagingSenderId: "928218267233",
-      appId: "1:928218267233:web:889914f0ebcbf529eeb420",
-      measurementId: "G-LEF5EWHC11"
+      appId: "1:928218267233:web:889914f0ebcbf529eeb420"
     };
 
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
     }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-    const round1 = (val) => Math.round(val * 10) / 10;
-    const round2 = (val) => Math.round(val * 100) / 100;
-    const formatScore = (val) => (val === null || val === undefined || isNaN(val)) ? '-' : val.toString().replace('.', ',');
+    const round1 = (val) => (val === null || val === undefined || isNaN(val) ? null : Math.round(val * 10) / 10);
+    const round2 = (val) => (val === null || val === undefined || isNaN(val) ? null : Math.round(val * 100) / 100);
+    const formatScore = (val) => (val === null || val === undefined || isNaN(val) ? '-' : val.toString().replace('.', ','));
 
     const getAcademicRank = (score) => {
       if (score === null || score === undefined || isNaN(score)) return '-';
@@ -139,115 +61,92 @@
       return 'Chưa đạt';
     };
 
-    const getRankBadgeClass = (rank) => {
+    const getRankBadge = (rank) => {
       switch (rank) {
-        case 'Xuất sắc': return 'badge-success';
-        case 'Tốt': return 'badge-primary';
-        case 'Khá': return 'badge-warning';
-        case 'Đạt': return 'badge-secondary';
-        case 'Chưa đạt': return 'badge-danger';
-        default: return '';
+        case 'Xuất sắc': return 'bg-emerald-100 text-emerald-800 border-emerald-300';
+        case 'Tốt': return 'bg-blue-100 text-blue-800 border-blue-300';
+        case 'Khá': return 'bg-amber-100 text-amber-800 border-amber-300';
+        case 'Đạt': return 'bg-slate-100 text-slate-700 border-slate-300';
+        case 'Chưa đạt': return 'bg-rose-100 text-rose-800 border-rose-300';
+        default: return 'bg-gray-100 text-gray-600 border-gray-200';
       }
     };
 
     function App() {
       const [currentUser, setCurrentUser] = useState(null);
       const [authLoading, setAuthLoading] = useState(true);
-      const [loginModalOpen, setLoginModalOpen] = useState(false);
       const [loginEmail, setLoginEmail] = useState('');
       const [loginPass, setLoginPass] = useState('');
       const [loginError, setLoginError] = useState('');
-      const [loginSubmitting, setLoginSubmitting] = useState(false);
+      const [loginModalOpen, setLoginModalOpen] = useState(false);
 
       const [currentTab, setCurrentTab] = useState('DASHBOARD');
-
-      // State dữ liệu chung
       const [semesterSetting, setSemesterSetting] = useState({ semester: 'HK1', calculateSpecialTopic: false });
+      
       const [classes, setClasses] = useState([]);
       const [selectedClassId, setSelectedClassId] = useState('');
-
-      // State dữ liệu lớp
       const [students, setStudents] = useState([]);
       const [groups, setGroups] = useState([]);
       const [scoreColumns, setScoreColumns] = useState([]);
       const [scoreEntries, setScoreEntries] = useState([]);
       const [scoreHistories, setScoreHistories] = useState([]);
-      const [bonusDeductionEntries, setBonusDeductionEntries] = useState([]);
-      const [classWeights, setClassWeights] = useState({});
+      const [bonusDeductionList, setBonusDeductionList] = useState([]);
 
-      // State quản lý lớp & học sinh
+      const [classWeights, setClassWeights] = useState({});
+      const [draftWeights, setDraftWeights] = useState({});
+      const [draftSuddenWeight, setDraftSuddenWeight] = useState(20);
+      const [weightNotice, setWeightNotice] = useState({ type: '', msg: '' });
+
       const [newClassName, setNewClassName] = useState('');
       const [newClassSpecial, setNewClassSpecial] = useState(true);
       const [importRawStudents, setImportRawStudents] = useState('');
       const [importError, setImportError] = useState('');
 
-      // State quản lý nhóm
       const [newGroupName, setNewGroupName] = useState('');
       const [selectedGroupMembers, setSelectedGroupMembers] = useState([]);
 
-      // State nhập điểm nhóm
       const [groupScoreModal, setGroupScoreModal] = useState(false);
-      const [groupScoreTargetCol, setGroupScoreTargetCol] = useState(null);
-      const [groupScoreTargetGroup, setGroupScoreTargetGroup] = useState(null);
-      const [groupScoreVal, setGroupScoreVal] = useState('');
-      const [groupMemberParticipations, setGroupMemberParticipations] = useState({});
+      const [groupTargetCol, setGroupTargetCol] = useState(null);
+      const [groupTargetGroup, setGroupTargetGroup] = useState(null);
+      const [groupScoreInput, setGroupScoreInput] = useState('');
+      const [groupMemberStatus, setGroupMemberStatus] = useState({});
 
-      // State chuyển loại cột điểm
-      const [moveColModalOpen, setMoveColModalOpen] = useState(false);
-      const [colToMove, setColToMove] = useState(null);
-      const [targetScoreType, setTargetScoreType] = useState('THUONG_XUYEN_BAO_TRUOC');
-
-      // State tạo cột điểm mới
       const [newColName, setNewColName] = useState('');
       const [newColType, setNewColType] = useState('THUONG_XUYEN_BAO_TRUOC');
 
-      // State nhập điểm chuỗi
+      const [moveColModal, setMoveColModal] = useState(false);
+      const [colToMove, setColToMove] = useState(null);
+      const [targetColType, setTargetColType] = useState('THUONG_XUYEN_BAO_TRUOC');
+
       const [stringInputModal, setStringInputModal] = useState(false);
-      const [activeColForInput, setActiveColForInput] = useState(null);
+      const [activeColForString, setActiveColForString] = useState(null);
       const [rawScoreString, setRawScoreString] = useState('');
-      const [parsedPreviewScores, setParsedPreviewScores] = useState(null);
+      const [stringParsedScores, setStringParsedScores] = useState(null);
       const [stringInputError, setStringInputError] = useState('');
 
-      // State nhập bảng
       const [tableInputModal, setTableInputModal] = useState(false);
-      const [activeColForTableInput, setActiveColForTableInput] = useState(null);
+      const [activeColForTable, setActiveColForTable] = useState(null);
       const [tableDraftScores, setTableDraftScores] = useState({});
 
-      // State tỉ trọng dạng draft
-      const [draftWeights, setDraftWeights] = useState({});
-      const [draftSuddenWeight, setDraftSuddenWeight] = useState(20);
-      const [weightNotice, setWeightNotice] = useState({ type: '', msg: '' });
+      const [bonusModalOpen, setBonusModalOpen] = useState(false);
+      const [bonusActionType, setBonusActionType] = useState('PLUS');
+      const [bonusReason, setBonusReason] = useState('');
+      const [bonusSelections, setBonusSelections] = useState({});
+      const [bonusNotice, setBonusNotice] = useState('');
 
-      // State điểm cải thiện
       const [improvementModal, setImprovementModal] = useState(false);
       const [improvementWeight, setImprovementWeight] = useState(30);
       const [improvementDraftScores, setImprovementDraftScores] = useState({});
       const [appliedImprovements, setAppliedImprovements] = useState({});
 
-      // State Điểm cộng / Điểm trừ mới
-      const [actionType, setActionType] = useState('CONG');
-      const [bonusDeductionModal, setBonusDeductionModal] = useState(false);
-      const [bonusDeductionReason, setBonusDeductionReason] = useState('');
-      const [bonusDeductionSelections, setBonusDeductionSelections] = useState({});
-      const [bonusDeductionNotice, setBonusDeductionNotice] = useState('');
-
-      // State Random học sinh
       const [randomClassId, setRandomClassId] = useState('');
-      const [randomQty, setRandomQty] = useState(1);
+      const [randomCount, setRandomCount] = useState(1);
       const [randomResults, setRandomResults] = useState([]);
 
-      // State Xuất Excel Preview
       const [excelPreviewOpen, setExcelPreviewOpen] = useState(false);
+      const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null });
 
-      // State Hộp thoại xác nhận xóa
-      const [confirmModal, setConfirmModal] = useState({
-        open: false,
-        title: '',
-        message: '',
-        onConfirm: null
-      });
-
-      const requestConfirm = (title, message, onConfirm) => {
+      const triggerConfirm = (title, message, onConfirm) => {
         setConfirmModal({
           open: true,
           title,
@@ -260,105 +159,130 @@
       };
 
       useEffect(() => {
-        const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
+        const unsubscribe = auth.onAuthStateChanged((user) => {
           setCurrentUser(user);
           setAuthLoading(false);
           if (user) {
             setCurrentTab('DASHBOARD');
+          } else {
+            setCurrentTab('LOOKUP');
           }
         });
         return () => unsubscribe();
       }, []);
 
-      const loadGlobalConfig = async () => {
+      const loadTeacherConfigAndClasses = async (user) => {
+        if (!user) return;
         try {
-          const db = firebase.firestore();
-          const semDoc = await db.collection('semesterSettings').doc('GLOBAL_CONFIG').get();
-          if (semDoc.exists) {
-            setSemesterSetting(semDoc.data());
+          const settingDoc = await db.collection('semesterSettings').doc('GLOBAL_CONFIG').get();
+          if (settingDoc.exists) {
+            setSemesterSetting(settingDoc.data());
           }
 
-          const classSnap = await db.collection('classes').get();
-          const list = [];
-          classSnap.forEach(d => list.push({ id: d.id, ...d.data() }));
-          setClasses(list);
-          if (list.length > 0 && !selectedClassId) {
-            setSelectedClassId(list[0].id);
-            setRandomClassId(list[0].id);
+          let classQuery = db.collection('classes');
+          if (user.email !== 'toapt989@gmail.com') {
+            classQuery = classQuery.where('teacherId', '==', user.uid);
           }
-        } catch (e) {
-          console.error("Lỗi nạp cấu hình:", e);
+          const snap = await classQuery.get();
+          const list = [];
+          snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+          list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+          setClasses(list);
+
+          if (list.length > 0) {
+            const currentSelectedStillExists = list.some(c => c.id === selectedClassId);
+            const targetId = currentSelectedStillExists ? selectedClassId : list[0].id;
+            setSelectedClassId(targetId);
+            setRandomClassId(targetId);
+          } else {
+            setSelectedClassId('');
+            setRandomClassId('');
+          }
+        } catch (err) {
+          console.error("Lỗi nạp danh sách lớp:", err);
         }
       };
 
       useEffect(() => {
-        loadGlobalConfig();
+        if (currentUser) {
+          loadTeacherConfigAndClasses(currentUser);
+        }
       }, [currentUser]);
 
       const loadClassData = async (classId) => {
-        if (!classId || !currentUser) return;
-        try {
-          const db = firebase.firestore();
+        if (!classId || !currentUser) {
+          setStudents([]);
+          setGroups([]);
+          setScoreColumns([]);
+          setScoreEntries([]);
+          setScoreHistories([]);
+          setBonusDeductionList([]);
+          return;
+        }
 
-          // 1. Học sinh
-          const stSnap = await db.collection('students').where('classId', '==', classId).get();
+        try {
+          const isSuper = currentUser.email === 'toapt989@gmail.com';
+          const teacherConstraint = (coll) => {
+            let ref = db.collection(coll).where('classId', '==', classId);
+            if (!isSuper) {
+              ref = ref.where('teacherId', '==', currentUser.uid);
+            }
+            return ref;
+          };
+
+          const [stSnap, grpSnap, colSnap, entSnap, histSnap, bdSnap] = await Promise.all([
+            teacherConstraint('students').get(),
+            teacherConstraint('groups').get(),
+            teacherConstraint('scoreColumns').get(),
+            teacherConstraint('scoreEntries').get(),
+            teacherConstraint('scoreHistory').get(),
+            teacherConstraint('bonusDeductions').get()
+          ]);
+
           const stList = [];
           stSnap.forEach(d => stList.push({ id: d.id, ...d.data() }));
           stList.sort((a, b) => a.orderNumber - b.orderNumber);
           setStudents(stList);
 
-          // 2. Nhóm
-          const grpSnap = await db.collection('groups').where('classId', '==', classId).get();
           const grpList = [];
           grpSnap.forEach(d => grpList.push({ id: d.id, ...d.data() }));
           setGroups(grpList);
 
-          // 3. Cột điểm gốc
-          const colSnap = await db.collection('scoreColumns').where('classId', '==', classId).get();
           const colList = [];
           colSnap.forEach(d => colList.push({ id: d.id, ...d.data() }));
           setScoreColumns(colList);
 
-          // 4. Điểm nhập
-          const entSnap = await db.collection('scoreEntries').where('classId', '==', classId).get();
           const entList = [];
           entSnap.forEach(d => entList.push({ id: d.id, ...d.data() }));
           setScoreEntries(entList);
 
-          // 5. Lịch sử điểm
-          const histSnap = await db.collection('scoreHistory').where('classId', '==', classId).get();
           const histList = [];
           histSnap.forEach(d => histList.push({ id: d.id, ...d.data() }));
           histList.sort((a, b) => b.timestamp - a.timestamp);
           setScoreHistories(histList);
 
-          // 6. Điểm cộng & trừ tích lũy
-          const bdSnap = await db.collection('bonusDeductionEntries').where('classId', '==', classId).get();
           const bdList = [];
           bdSnap.forEach(d => bdList.push({ id: d.id, ...d.data() }));
-          setBonusDeductionEntries(bdList);
+          setBonusDeductionList(bdList);
 
-          // 7. Tỉ trọng: Nạp an toàn từ document lớp hoặc local fallback
-          const curCls = classes.find(c => c.id === classId);
-          let loadedWeights = curCls?.weights || {};
-          let loadedSudden = curCls?.suddenWeight !== undefined ? curCls.suddenWeight : 20;
+          const currentCls = classes.find(c => c.id === classId);
+          let loadedWeights = currentCls?.weights || {};
+          let loadedSudden = currentCls?.suddenWeight !== undefined ? currentCls.suddenWeight : 20;
 
-          // Đọc thêm từ localStorage để backup chắc chắn
           try {
-            const localSaved = localStorage.getItem(`weights_${classId}`);
+            const localSaved = localStorage.getItem(`weights_${currentUser.uid}_${classId}`);
             if (localSaved) {
               const parsed = JSON.parse(localSaved);
               if (parsed.weights) loadedWeights = { ...loadedWeights, ...parsed.weights };
               if (parsed.suddenWeight !== undefined) loadedSudden = parsed.suddenWeight;
             }
-          } catch (err) {}
+          } catch (e) {}
 
           setClassWeights({ weights: loadedWeights, suddenWeight: loadedSudden });
           setDraftWeights(loadedWeights);
           setDraftSuddenWeight(loadedSudden);
-
         } catch (err) {
-          console.error("Lỗi khi tải dữ liệu lớp:", err);
+          console.error("Lỗi nạp dữ liệu lớp học:", err);
         }
       };
 
@@ -371,52 +295,49 @@
       const handleLogin = async (e) => {
         e.preventDefault();
         setLoginError('');
-        setLoginSubmitting(true);
         try {
-          await firebase.auth().signInWithEmailAndPassword(loginEmail.trim(), loginPass);
+          await auth.signInWithEmailAndPassword(loginEmail.trim(), loginPass);
           setLoginModalOpen(false);
           setLoginEmail('');
           setLoginPass('');
         } catch (err) {
-          setLoginError('Đăng nhập không thành công, vui lòng kiểm tra email và mật khẩu');
-        } finally {
-          setLoginSubmitting(false);
+          setLoginError('Đăng nhập không thành công. Vui lòng kiểm tra lại email và mật khẩu.');
         }
       };
 
       const handleLogout = async () => {
-        await firebase.auth().signOut();
-        setCurrentTab('DASHBOARD');
+        await auth.signOut();
+        setCurrentTab('LOOKUP');
       };
 
       const handleSaveSemesterSetting = async (sem, calcSpecial) => {
         const payload = { semester: sem, calculateSpecialTopic: calcSpecial, updatedAt: Date.now() };
         try {
-          await firebase.firestore().collection('semesterSettings').doc('GLOBAL_CONFIG').set(payload, { merge: true });
+          await db.collection('semesterSettings').doc('GLOBAL_CONFIG').set(payload, { merge: true });
           setSemesterSetting(payload);
         } catch (e) {
-          console.error("Lỗi cập nhật học kỳ:", e);
+          console.error("Lỗi cập nhật cấu hình học kỳ:", e);
         }
       };
 
       const handleCreateClass = async (e) => {
         e.preventDefault();
-        if (!newClassName.trim()) return;
+        if (!newClassName.trim() || !currentUser) return;
         try {
-          const db = firebase.firestore();
-          const ref = db.collection('classes').doc();
+          const docRef = db.collection('classes').doc();
           const newCls = {
-            id: ref.id,
+            id: docRef.id,
             name: newClassName.trim(),
             hasSpecialTopic: newClassSpecial,
+            teacherId: currentUser.uid,
+            createdBy: currentUser.email,
             weights: {},
             suddenWeight: 20,
-            createdAt: Date.now(),
-            createdBy: currentUser.email
+            createdAt: Date.now()
           };
-          await ref.set(newCls);
+          await docRef.set(newCls);
           setNewClassName('');
-          await loadGlobalConfig();
+          await loadTeacherConfigAndClasses(currentUser);
           setSelectedClassId(newCls.id);
         } catch (err) {
           console.error("Lỗi tạo lớp:", err);
@@ -424,19 +345,34 @@
       };
 
       const handleDeleteClass = (classId) => {
-        requestConfirm(
+        triggerConfirm(
           'Xác nhận xóa lớp học',
-          'Bạn có chắc chắn muốn xóa lớp học này? Toàn bộ dữ liệu điểm và học sinh của lớp sẽ không thể hoàn tác.',
+          'Bạn có chắc chắn muốn xóa lớp này? Toàn bộ danh sách học sinh, điểm số và nhóm liên quan của lớp sẽ bị xóa hoàn toàn.',
           async () => {
             try {
-              const db = firebase.firestore();
-              await db.collection('classes').doc(classId).delete();
-              await loadGlobalConfig();
-              if (selectedClassId === classId) {
-                setSelectedClassId(classes.find(c => c.id !== classId)?.id || '');
-              }
-            } catch (e) {
-              console.error("Lỗi xóa lớp:", e);
+              const batch = db.batch();
+              batch.delete(db.collection('classes').doc(classId));
+
+              const [stSnap, grpSnap, colSnap, entSnap, histSnap, bdSnap] = await Promise.all([
+                db.collection('students').where('classId', '==', classId).get(),
+                db.collection('groups').where('classId', '==', classId).get(),
+                db.collection('scoreColumns').where('classId', '==', classId).get(),
+                db.collection('scoreEntries').where('classId', '==', classId).get(),
+                db.collection('scoreHistory').where('classId', '==', classId).get(),
+                db.collection('bonusDeductions').where('classId', '==', classId).get()
+              ]);
+
+              stSnap.forEach(d => batch.delete(d.ref));
+              grpSnap.forEach(d => batch.delete(d.ref));
+              colSnap.forEach(d => batch.delete(d.ref));
+              entSnap.forEach(d => batch.delete(d.ref));
+              histSnap.forEach(d => batch.delete(d.ref));
+              bdSnap.forEach(d => batch.delete(d.ref));
+
+              await batch.commit();
+              await loadTeacherConfigAndClasses(currentUser);
+            } catch (err) {
+              console.error("Lỗi xóa lớp học:", err);
             }
           }
         );
@@ -445,7 +381,7 @@
       const handleImportStudents = async (e) => {
         e.preventDefault();
         setImportError('');
-        if (!importRawStudents.trim() || !selectedClassId) return;
+        if (!importRawStudents.trim() || !selectedClassId || !currentUser) return;
 
         const lines = importRawStudents.trim().split('\n').filter(l => l.trim().length > 0);
         const parsed = [];
@@ -454,7 +390,7 @@
         for (let i = 0; i < lines.length; i++) {
           const parts = lines[i].split(',').map(s => s.trim());
           if (parts.length !== 3) {
-            setImportError(`Dòng ${i + 1} cần đúng định dạng: STT,Mã HS,Họ và tên`);
+            setImportError(`Dòng ${i + 1} cần đúng cú pháp: STT,Mã HS,Họ và tên`);
             return;
           }
           const orderNum = parseInt(parts[0], 10);
@@ -462,10 +398,9 @@
           const name = parts[2];
 
           if (isNaN(orderNum) || !code || !name) {
-            setImportError(`Dòng ${i + 1} có giá trị chưa hợp lệ`);
+            setImportError(`Dòng ${i + 1} có dữ liệu không hợp lệ`);
             return;
           }
-
           if (seenCodes.has(code)) {
             setImportError(`Trùng lặp Mã HS ${code} tại dòng ${i + 1}`);
             return;
@@ -475,21 +410,19 @@
         }
 
         try {
-          const db = firebase.firestore();
           const batch = db.batch();
-
           parsed.forEach(st => {
-            const ref = db.collection('students').doc(`${selectedClassId}_${st.studentCode}`);
+            const ref = db.collection('students').doc(`${currentUser.uid}_${selectedClassId}_${st.studentCode}`);
             batch.set(ref, {
-              id: `${selectedClassId}_${st.studentCode}`,
+              id: ref.id,
               classId: selectedClassId,
+              teacherId: currentUser.uid,
               orderNumber: st.orderNumber,
               studentCode: st.studentCode,
               fullName: st.fullName,
               createdAt: Date.now()
             });
           });
-
           await batch.commit();
           setImportRawStudents('');
           loadClassData(selectedClassId);
@@ -500,13 +433,13 @@
 
       const handleCreateColumn = async (e) => {
         e.preventDefault();
-        if (!newColName.trim() || !selectedClassId) return;
+        if (!newColName.trim() || !selectedClassId || !currentUser) return;
         try {
-          const db = firebase.firestore();
           const colRef = db.collection('scoreColumns').doc();
           await colRef.set({
             id: colRef.id,
             classId: selectedClassId,
+            teacherId: currentUser.uid,
             name: newColName.trim(),
             type: newColType,
             semester: semesterSetting.semester,
@@ -515,37 +448,38 @@
           setNewColName('');
           loadClassData(selectedClassId);
         } catch (err) {
-          console.error("Lỗi tạo cột:", err);
+          console.error("Lỗi tạo cột điểm:", err);
         }
       };
 
       const handleDeleteColumn = (col) => {
-        requestConfirm(
+        triggerConfirm(
           'Xác nhận xóa cột điểm gốc',
-          `Bạn có chắc chắn muốn xóa cột điểm "${col.name}"? Toàn bộ điểm học sinh đã nhập trong cột này sẽ bị xóa bỏ.`,
+          `Bạn có chắc chắn muốn xóa cột "${col.name}"? Toàn bộ điểm số học sinh đã nhập trong cột này sẽ bị xóa bỏ hoàn toàn.`,
           async () => {
             try {
-              const db = firebase.firestore();
               const batch = db.batch();
-
               batch.delete(db.collection('scoreColumns').doc(col.id));
 
-              const entriesSnap = await db.collection('scoreEntries')
-                .where('classId', '==', selectedClassId)
-                .where('scoreColumnId', '==', col.id)
-                .get();
+              const entries = scoreEntries.filter(e => e.scoreColumnId === col.id);
+              entries.forEach(e => batch.delete(db.collection('scoreEntries').doc(e.id)));
 
-              entriesSnap.forEach(d => batch.delete(d.ref));
-
-              const hRef = db.collection('scoreHistory').doc();
-              batch.set(hRef, {
-                id: hRef.id,
+              const histRef = db.collection('scoreHistory').doc();
+              batch.set(histRef, {
+                id: histRef.id,
                 classId: selectedClassId,
+                teacherId: currentUser.uid,
+                studentId: 'ALL',
+                studentCode: 'ALL',
                 scoreColumnName: col.name,
+                semester: col.semester || semesterSetting.semester,
+                scoreType: col.type,
+                oldScore: null,
+                newScore: 0,
+                participationStatus: 'KHONG_AP_DUNG',
                 reason: `Đã xóa cột điểm ${col.name} (${col.type})`,
                 timestamp: Date.now(),
-                modifiedBy: currentUser.email,
-                participationStatus: 'KHONG_AP_DUNG'
+                modifiedBy: currentUser.email
               });
 
               await batch.commit();
@@ -558,88 +492,99 @@
       };
 
       const handleExecuteChangeColumnType = async () => {
-        if (!colToMove || !targetScoreType) return;
+        if (!colToMove || !targetColType || !currentUser) return;
         try {
-          const db = firebase.firestore();
           const batch = db.batch();
-
           const colRef = db.collection('scoreColumns').doc(colToMove.id);
-          batch.update(colRef, { type: targetScoreType });
+          batch.update(colRef, { type: targetColType });
 
-          const relEntries = scoreEntries.filter(e => e.scoreColumnId === colToMove.id);
-          relEntries.forEach(ent => {
-            const entryRef = db.collection('scoreEntries').doc(ent.id);
-            batch.update(entryRef, { scoreType: targetScoreType });
+          const entries = scoreEntries.filter(e => e.scoreColumnId === colToMove.id);
+          entries.forEach(e => {
+            const entryRef = db.collection('scoreEntries').doc(e.id);
+            batch.update(entryRef, { scoreType: targetColType });
           });
 
           const histRef = db.collection('scoreHistory').doc();
           batch.set(histRef, {
             id: histRef.id,
             classId: selectedClassId,
+            teacherId: currentUser.uid,
+            studentId: 'ALL',
+            studentCode: 'ALL',
             scoreColumnName: colToMove.name,
-            reason: `Chuyển cột từ [${colToMove.type}] sang [${targetScoreType}]`,
+            semester: colToMove.semester || semesterSetting.semester,
+            scoreType: targetColType,
+            oldScore: null,
+            newScore: 0,
+            participationStatus: 'KHONG_AP_DUNG',
+            reason: `Chuyển cột từ [${colToMove.type}] sang [${targetColType}]`,
             timestamp: Date.now(),
-            modifiedBy: currentUser.email,
-            participationStatus: 'KHONG_AP_DUNG'
+            modifiedBy: currentUser.email
           });
 
           await batch.commit();
-          setMoveColModalOpen(false);
+          setMoveColModal(false);
           setColToMove(null);
           loadClassData(selectedClassId);
         } catch (err) {
-          console.error("Lỗi chuyển loại cột:", err);
+          console.error("Lỗi chuyển loại cột điểm:", err);
         }
       };
 
-      // Lưu tỉ trọng tùy ý: Lưu an toàn vào chính doc classes & scoreColumns & localStorage
       const handleSaveWeights = async () => {
         setWeightNotice({ type: '', msg: '' });
-        const sW = parseFloat(draftSuddenWeight);
-        const suddenVal = isNaN(sW) ? 20 : sW;
+        const suddenVal = parseFloat(draftSuddenWeight);
+        const finalSudden = isNaN(suddenVal) ? 20 : suddenVal;
+
+        const currentSemCols = scoreColumns.filter(c => c.semester === semesterSetting.semester || c.type === 'CHUYEN_DE');
+        const typesToCheck = ['THUONG_XUYEN_BAO_TRUOC', 'DIEM_NHOM', 'THUONG_XUYEN_CA_NHAN', 'CHUYEN_DE'];
+
+        for (const type of typesToCheck) {
+          const colsOfType = currentSemCols.filter(c => c.type === type);
+          if (colsOfType.length > 0) {
+            let sum = 0;
+            colsOfType.forEach(col => {
+              const w = parseFloat(draftWeights[col.id]);
+              sum += isNaN(w) ? (100 / colsOfType.length) : w;
+            });
+            if (Math.abs(sum - 100) > 0.01) {
+              setWeightNotice({
+                type: 'error',
+                msg: `Tổng tỉ trọng của loại điểm [${type}] hiện là ${Math.round(sum)}%. Bắt buộc phải đúng 100%.`
+              });
+              return;
+            }
+          }
+        }
 
         try {
-          const db = firebase.firestore();
-
-          // 1. Lưu vào collection classes (đảm bảo không bị lỗi permission do collection riêng)
           await db.collection('classes').doc(selectedClassId).set({
             weights: draftWeights,
-            suddenWeight: suddenVal,
+            suddenWeight: finalSudden,
             updatedAt: Date.now()
           }, { merge: true });
 
-          // 2. Đồng bộ weight vào từng document scoreColumns nếu có
-          const batch = db.batch();
-          Object.keys(draftWeights).forEach(colId => {
-            const ref = db.collection('scoreColumns').doc(colId);
-            batch.set(ref, { weight: parseFloat(draftWeights[colId]) || 0 }, { merge: true });
-          });
-          await batch.commit().catch(() => {});
-
-          // 3. Backup vào localStorage để không bao giờ mất
-          localStorage.setItem(`weights_${selectedClassId}`, JSON.stringify({
+          localStorage.setItem(`weights_${currentUser.uid}_${selectedClassId}`, JSON.stringify({
             weights: draftWeights,
-            suddenWeight: suddenVal
+            suddenWeight: finalSudden
           }));
 
-          setClassWeights({ weights: draftWeights, suddenWeight: suddenVal });
-          setWeightNotice({ type: 'success', msg: 'Đã lưu thiết lập tỉ trọng thành công!' });
+          setClassWeights({ weights: draftWeights, suddenWeight: finalSudden });
+          setWeightNotice({ type: 'success', msg: 'Đã lưu thiết lập tỉ trọng thành công vào lớp học.' });
           loadClassData(selectedClassId);
-        } catch (e) {
-          console.warn("Lưu Firestore bị lỗi, áp dụng fallback localStorage:", e);
-          // Fallback cục bộ đảm bảo giáo viên luôn làm việc được mượt mà
-          localStorage.setItem(`weights_${selectedClassId}`, JSON.stringify({
+        } catch (err) {
+          localStorage.setItem(`weights_${currentUser.uid}_${selectedClassId}`, JSON.stringify({
             weights: draftWeights,
-            suddenWeight: suddenVal
+            suddenWeight: finalSudden
           }));
-          setClassWeights({ weights: draftWeights, suddenWeight: suddenVal });
-          setWeightNotice({ type: 'success', msg: 'Đã lưu tỉ trọng thành công vào bộ nhớ lớp!' });
+          setClassWeights({ weights: draftWeights, suddenWeight: finalSudden });
+          setWeightNotice({ type: 'success', msg: 'Đã lưu thiết lập tỉ trọng vào bộ nhớ lớp của giáo viên.' });
         }
       };
 
       const handlePreviewScoreString = () => {
         setStringInputError('');
-        setParsedPreviewScores(null);
+        setStringParsedScores(null);
         if (!rawScoreString.trim()) {
           setStringInputError('Vui lòng nhập chuỗi điểm');
           return;
@@ -647,59 +592,62 @@
 
         const tokens = rawScoreString.trim().split(/\s+/).map(s => s.replace(',', '.'));
         if (tokens.length !== students.length) {
-          setStringInputError(`Chuỗi có ${tokens.length} điểm, nhưng lớp có đúng ${students.length} học sinh.`);
+          setStringInputError(`Chuỗi có ${tokens.length} điểm, nhưng lớp có chính xác ${students.length} học sinh.`);
           return;
         }
 
-        const scores = [];
+        const parsed = [];
         for (let i = 0; i < tokens.length; i++) {
           const val = parseFloat(tokens[i]);
           if (isNaN(val) || val < 0 || val > 10) {
-            setStringInputError(`Điểm STT ${i + 1} (${tokens[i]}) không hợp lệ (cần từ 0 đến 10)`);
+            setStringInputError(`Điểm STT ${i + 1} (${tokens[i]}) không hợp lệ (phải từ 0 đến 10)`);
             return;
           }
-          scores.push(round1(val));
+          parsed.push(round1(val));
         }
-        setParsedPreviewScores(scores);
+        setStringParsedScores(parsed);
       };
 
       const handleSaveScoreString = async () => {
-        if (!parsedPreviewScores || !activeColForInput) return;
+        if (!stringParsedScores || !activeColForString || !currentUser) return;
         try {
-          const db = firebase.firestore();
           const batch = db.batch();
           const now = Date.now();
 
           students.forEach((st, idx) => {
-            const sc = parsedPreviewScores[idx];
-            const entryId = `${selectedClassId}_${st.id}_${activeColForInput.id}`;
+            const sc = stringParsedScores[idx];
+            const entryId = `${currentUser.uid}_${selectedClassId}_${st.id}_${activeColForString.id}`;
             const entryRef = db.collection('scoreEntries').doc(entryId);
 
             batch.set(entryRef, {
               id: entryId,
               classId: selectedClassId,
+              teacherId: currentUser.uid,
               studentId: st.id,
               studentCode: st.studentCode,
-              scoreColumnId: activeColForInput.id,
-              scoreType: activeColForInput.type,
-              semester: activeColForInput.semester || semesterSetting.semester,
+              scoreColumnId: activeColForString.id,
+              scoreType: activeColForString.type,
+              semester: activeColForString.semester || semesterSetting.semester,
               score: sc,
               updatedAt: now,
               createdBy: currentUser.email
             });
 
-            const hRef = db.collection('scoreHistory').doc();
-            batch.set(hRef, {
-              id: hRef.id,
+            const histRef = db.collection('scoreHistory').doc();
+            batch.set(histRef, {
+              id: histRef.id,
               scoreEntryId: entryId,
               classId: selectedClassId,
+              teacherId: currentUser.uid,
               studentId: st.id,
               studentCode: st.studentCode,
-              semester: activeColForInput.semester || semesterSetting.semester,
-              scoreType: activeColForInput.type,
-              scoreColumnName: activeColForInput.name,
+              semester: activeColForString.semester || semesterSetting.semester,
+              scoreType: activeColForString.type,
+              scoreColumnName: activeColForString.name,
+              oldScore: null,
               newScore: sc,
               participationStatus: 'CO_THAM_GIA',
+              reason: 'Nhập điểm dạng chuỗi theo STT',
               modifiedBy: currentUser.email,
               timestamp: now
             });
@@ -708,15 +656,15 @@
           await batch.commit();
           setStringInputModal(false);
           setRawScoreString('');
-          setParsedPreviewScores(null);
+          setStringParsedScores(null);
           loadClassData(selectedClassId);
-        } catch (e) {
-          console.error("Lỗi lưu điểm chuỗi:", e);
+        } catch (err) {
+          console.error("Lỗi lưu điểm chuỗi:", err);
         }
       };
 
       const openTableInput = (col) => {
-        setActiveColForTableInput(col);
+        setActiveColForTable(col);
         const drafts = {};
         students.forEach(st => {
           const entry = scoreEntries.find(e => e.studentId === st.id && e.scoreColumnId === col.id);
@@ -727,46 +675,49 @@
       };
 
       const handleSaveTableScores = async () => {
-        if (!activeColForTableInput) return;
+        if (!activeColForTable || !currentUser) return;
         try {
-          const db = firebase.firestore();
           const batch = db.batch();
           const now = Date.now();
 
           students.forEach(st => {
-            const rawVal = tableDraftScores[st.id];
-            if (rawVal !== undefined && rawVal !== '') {
-              const val = parseFloat(rawVal.replace(',', '.'));
+            const raw = tableDraftScores[st.id];
+            if (raw !== undefined && raw !== '') {
+              const val = parseFloat(raw.replace(',', '.'));
               if (!isNaN(val) && val >= 0 && val <= 10) {
                 const finalSc = round1(val);
-                const entryId = `${selectedClassId}_${st.id}_${activeColForTableInput.id}`;
+                const entryId = `${currentUser.uid}_${selectedClassId}_${st.id}_${activeColForTable.id}`;
                 const entryRef = db.collection('scoreEntries').doc(entryId);
 
                 batch.set(entryRef, {
                   id: entryId,
                   classId: selectedClassId,
+                  teacherId: currentUser.uid,
                   studentId: st.id,
                   studentCode: st.studentCode,
-                  scoreColumnId: activeColForTableInput.id,
-                  scoreType: activeColForTableInput.type,
-                  semester: activeColForTableInput.semester,
+                  scoreColumnId: activeColForTable.id,
+                  scoreType: activeColForTable.type,
+                  semester: activeColForTable.semester || semesterSetting.semester,
                   score: finalSc,
                   updatedAt: now,
                   createdBy: currentUser.email
                 });
 
-                const hRef = db.collection('scoreHistory').doc();
-                batch.set(hRef, {
-                  id: hRef.id,
+                const histRef = db.collection('scoreHistory').doc();
+                batch.set(histRef, {
+                  id: histRef.id,
                   scoreEntryId: entryId,
                   classId: selectedClassId,
+                  teacherId: currentUser.uid,
                   studentId: st.id,
                   studentCode: st.studentCode,
-                  semester: activeColForTableInput.semester,
-                  scoreType: activeColForTableInput.type,
-                  scoreColumnName: activeColForTableInput.name,
+                  semester: activeColForTable.semester || semesterSetting.semester,
+                  scoreType: activeColForTable.type,
+                  scoreColumnName: activeColForTable.name,
+                  oldScore: null,
                   newScore: finalSc,
                   participationStatus: 'CO_THAM_GIA',
+                  reason: 'Nhập điểm trực tiếp từ bảng',
                   modifiedBy: currentUser.email,
                   timestamp: now
                 });
@@ -777,20 +728,20 @@
           await batch.commit();
           setTableInputModal(false);
           loadClassData(selectedClassId);
-        } catch (e) {
-          console.error("Lỗi lưu điểm bảng:", e);
+        } catch (err) {
+          console.error("Lỗi lưu điểm bảng:", err);
         }
       };
 
       const handleCreateGroup = async (e) => {
         e.preventDefault();
-        if (!newGroupName.trim() || !selectedClassId) return;
+        if (!newGroupName.trim() || !selectedClassId || !currentUser) return;
         try {
-          const db = firebase.firestore();
           const ref = db.collection('groups').doc();
           await ref.set({
             id: ref.id,
             classId: selectedClassId,
+            teacherId: currentUser.uid,
             name: newGroupName.trim(),
             memberStudentIds: selectedGroupMembers,
             createdAt: Date.now()
@@ -804,86 +755,87 @@
       };
 
       const handleDissolveGroup = (groupId) => {
-        requestConfirm(
+        triggerConfirm(
           'Xác nhận giải tán nhóm',
-          'Bạn có chắc chắn muốn giải tán nhóm này? Các điểm nhóm đã ghi nhận trước đó cho học sinh vẫn sẽ được bảo toàn nguyên vẹn.',
+          'Bạn có chắc chắn muốn giải tán nhóm này? Điểm nhóm đã ghi nhận trước đó cho từng học sinh vẫn được bảo toàn nguyên vẹn nhờ dữ liệu snapshot.',
           async () => {
             try {
-              const db = firebase.firestore();
               await db.collection('groups').doc(groupId).delete();
               loadClassData(selectedClassId);
-            } catch (e) {
-              console.error("Lỗi giải tán nhóm:", e);
+            } catch (err) {
+              console.error("Lỗi giải tán nhóm:", err);
             }
           }
         );
       };
 
-      const openGroupScoreInput = (col, group) => {
-        setGroupScoreTargetCol(col);
-        setGroupScoreTargetGroup(group);
-        setGroupScoreVal('');
-        const initialParticipations = {};
-        (group.memberStudentIds || []).forEach(sid => {
-          initialParticipations[sid] = true;
+      const openGroupScoreInputModal = (col, grp) => {
+        setGroupTargetCol(col);
+        setGroupTargetGroup(grp);
+        setGroupScoreInput('');
+        const initial = {};
+        (grp.memberStudentIds || []).forEach(sid => {
+          initial[sid] = true;
         });
-        setGroupMemberParticipations(initialParticipations);
+        setGroupMemberStatus(initial);
         setGroupScoreModal(true);
       };
 
       const handleSaveGroupScore = async () => {
-        const score = parseFloat(groupScoreVal.replace(',', '.'));
-        if (isNaN(score) || score < 0 || score > 10) return;
+        const val = parseFloat(groupScoreInput.replace(',', '.'));
+        if (isNaN(val) || val < 0 || val > 10 || !groupTargetCol || !groupTargetGroup || !currentUser) return;
 
         try {
-          const db = firebase.firestore();
           const batch = db.batch();
           const now = Date.now();
 
           const snapshot = {
-            groupId: groupScoreTargetGroup.id,
-            groupName: groupScoreTargetGroup.name,
-            membersSnapshot: groupScoreTargetGroup.memberStudentIds || []
+            groupId: groupTargetGroup.id,
+            groupName: groupTargetGroup.name,
+            membersSnapshot: groupTargetGroup.memberStudentIds || []
           };
 
-          (groupScoreTargetGroup.memberStudentIds || []).forEach(stId => {
+          (groupTargetGroup.memberStudentIds || []).forEach(stId => {
             const st = students.find(s => s.id === stId);
             if (!st) return;
 
-            const hasParticipated = groupMemberParticipations[stId] !== false;
-            const finalStScore = hasParticipated ? round1(score) : 0;
-            const entryId = `${selectedClassId}_${stId}_${groupScoreTargetCol.id}`;
+            const participated = groupMemberStatus[stId] !== false;
+            const finalStScore = participated ? round1(val) : 0;
+            const entryId = `${currentUser.uid}_${selectedClassId}_${stId}_${groupTargetCol.id}`;
             const entryRef = db.collection('scoreEntries').doc(entryId);
 
             batch.set(entryRef, {
               id: entryId,
               classId: selectedClassId,
+              teacherId: currentUser.uid,
               studentId: stId,
               studentCode: st.studentCode,
-              scoreColumnId: groupScoreTargetCol.id,
+              scoreColumnId: groupTargetCol.id,
               scoreType: 'DIEM_NHOM',
-              semester: groupScoreTargetCol.semester,
+              semester: groupTargetCol.semester || semesterSetting.semester,
               score: finalStScore,
-              participationStatus: hasParticipated ? 'CO_THAM_GIA' : 'KHONG_THAM_GIA',
+              participationStatus: participated ? 'CO_THAM_GIA' : 'KHONG_THAM_GIA',
               groupSnapshot: snapshot,
               updatedAt: now,
               createdBy: currentUser.email
             });
 
-            const hRef = db.collection('scoreHistory').doc();
-            batch.set(hRef, {
-              id: hRef.id,
+            const histRef = db.collection('scoreHistory').doc();
+            batch.set(histRef, {
+              id: histRef.id,
               scoreEntryId: entryId,
               classId: selectedClassId,
+              teacherId: currentUser.uid,
               studentId: stId,
               studentCode: st.studentCode,
-              semester: groupScoreTargetCol.semester,
+              semester: groupTargetCol.semester || semesterSetting.semester,
               scoreType: 'DIEM_NHOM',
-              scoreColumnName: groupScoreTargetCol.name,
+              scoreColumnName: groupTargetCol.name,
+              oldScore: null,
               newScore: finalStScore,
-              participationStatus: hasParticipated ? 'CO_THAM_GIA' : 'KHONG_THAM_GIA',
+              participationStatus: participated ? 'CO_THAM_GIA' : 'KHONG_THAM_GIA',
               groupSnapshot: snapshot,
-              reason: hasParticipated ? 'Nhập điểm nhóm' : 'Không tham gia hoạt động nhóm (Ghi nhận 0 điểm)',
+              reason: participated ? 'Ghi nhận điểm hoạt động nhóm' : 'Không tham gia hoạt động nhóm (Ghi nhận 0 điểm)',
               modifiedBy: currentUser.email,
               timestamp: now
             });
@@ -892,123 +844,127 @@
           await batch.commit();
           setGroupScoreModal(false);
           loadClassData(selectedClassId);
-        } catch (e) {
-          console.error("Lỗi lưu điểm nhóm:", e);
+        } catch (err) {
+          console.error("Lỗi lưu điểm nhóm:", err);
         }
       };
 
-      const openBonusDeductionModal = (type) => {
-        setActionType(type);
-        setBonusDeductionReason('');
-        setBonusDeductionSelections({});
-        setBonusDeductionNotice('');
-        setBonusDeductionModal(true);
+      const openBonusModal = (type) => {
+        setBonusActionType(type);
+        setBonusReason('');
+        setBonusSelections({});
+        setBonusNotice('');
+        setBonusModalOpen(true);
       };
 
       const handleSaveBonusDeduction = async () => {
-        if (!bonusDeductionReason.trim()) {
-          setBonusDeductionNotice('Vui lòng nhập lý do cộng/trừ điểm');
+        if (!bonusReason.trim()) {
+          setBonusNotice('Vui lòng nhập lý do cộng hoặc trừ điểm');
           return;
         }
 
-        const entriesToSave = [];
-        Object.keys(bonusDeductionSelections).forEach(sid => {
-          const pts = bonusDeductionSelections[sid];
+        const entriesToRecord = [];
+        Object.keys(bonusSelections).forEach(sid => {
+          const pts = bonusSelections[sid];
           if (pts && pts !== 0) {
             const st = students.find(s => s.id === sid);
             if (st) {
-              entriesToSave.push({
+              entriesToRecord.push({
                 studentId: st.id,
                 studentCode: st.studentCode,
                 fullName: st.fullName,
-                points: actionType === 'CONG' ? Math.abs(pts) : -Math.abs(pts)
+                points: bonusActionType === 'PLUS' ? Math.abs(pts) : -Math.abs(pts)
               });
             }
           }
         });
 
-        if (entriesToSave.length === 0) {
-          setBonusDeductionNotice('Vui lòng chọn mức điểm cho ít nhất 1 học sinh');
+        if (entriesToRecord.length === 0) {
+          setBonusNotice('Vui lòng chọn mức điểm cho ít nhất một học sinh');
           return;
         }
 
         try {
-          const db = firebase.firestore();
           const batch = db.batch();
           const now = Date.now();
 
-          entriesToSave.forEach(item => {
-            const bdRef = db.collection('bonusDeductionEntries').doc();
+          entriesToRecord.forEach(item => {
+            const bdRef = db.collection('bonusDeductions').doc();
             batch.set(bdRef, {
               id: bdRef.id,
               classId: selectedClassId,
+              teacherId: currentUser.uid,
               studentId: item.studentId,
               studentCode: item.studentCode,
               fullName: item.fullName,
               semester: semesterSetting.semester,
-              type: actionType,
+              type: bonusActionType,
               points: item.points,
-              reason: bonusDeductionReason.trim(),
-              createdAt: now,
+              reason: bonusReason.trim(),
+              timestamp: now,
               createdBy: currentUser.email
             });
 
-            const hRef = db.collection('scoreHistory').doc();
-            batch.set(hRef, {
-              id: hRef.id,
+            const histRef = db.collection('scoreHistory').doc();
+            batch.set(histRef, {
+              id: histRef.id,
               classId: selectedClassId,
+              teacherId: currentUser.uid,
               studentId: item.studentId,
               studentCode: item.studentCode,
               semester: semesterSetting.semester,
-              scoreType: actionType === 'CONG' ? 'DIEM_CONG' : 'DIEM_TRU',
-              scoreColumnName: actionType === 'CONG' ? 'Điểm cộng tích lũy' : 'Điểm trừ tích lũy',
+              scoreType: bonusActionType === 'PLUS' ? 'DIEM_CONG' : 'DIEM_TRU',
+              scoreColumnName: bonusActionType === 'PLUS' ? 'Điểm cộng tích lũy' : 'Điểm trừ tích lũy',
+              oldScore: null,
               newScore: item.points,
               participationStatus: 'KHONG_AP_DUNG',
-              reason: bonusDeductionReason.trim(),
+              reason: bonusReason.trim(),
               modifiedBy: currentUser.email,
               timestamp: now
             });
           });
 
           await batch.commit();
-          setBonusDeductionModal(false);
+          setBonusModalOpen(false);
           loadClassData(selectedClassId);
         } catch (err) {
           console.error("Lỗi lưu điểm cộng/trừ:", err);
-          setBonusDeductionNotice('Lỗi khi lưu dữ liệu: ' + err.message);
+          setBonusNotice('Lỗi khi lưu dữ liệu: ' + err.message);
         }
       };
 
-      // Thống kê điểm cộng/trừ tích lũy
-      const accumulatedBonusDeduction = useMemo(() => {
+      const accumulatedBonusStats = useMemo(() => {
         const stats = {};
         students.forEach(st => {
-          stats[st.id] = { totalBonus: 0, totalDeduction: 0, netPoints: 0 };
+          stats[st.id] = { totalPlus: 0, totalMinus: 0, netPoints: 0 };
         });
 
-        const semEntries = bonusDeductionEntries.filter(e => e.semester === semesterSetting.semester);
-        semEntries.forEach(entry => {
-          if (stats[entry.studentId]) {
-            if (entry.type === 'CONG') {
-              stats[entry.studentId].totalBonus = round2(stats[entry.studentId].totalBonus + Math.abs(entry.points));
-            } else if (entry.type === 'TRU') {
-              stats[entry.studentId].totalDeduction = round2(stats[entry.studentId].totalDeduction + Math.abs(entry.points));
+        const semRecords = bonusDeductionList.filter(b => b.semester === semesterSetting.semester);
+        semRecords.forEach(b => {
+          if (stats[b.studentId]) {
+            if (b.type === 'PLUS') {
+              stats[b.studentId].totalPlus = round2(stats[b.studentId].totalPlus + Math.abs(b.points));
+            } else if (b.type === 'MINUS') {
+              stats[b.studentId].totalMinus = round2(stats[b.studentId].totalMinus + Math.abs(b.points));
             }
           }
         });
 
         students.forEach(st => {
-          stats[st.id].netPoints = round2(stats[st.id].totalBonus - stats[st.id].totalDeduction);
+          stats[st.id].netPoints = round2(stats[st.id].totalPlus - stats[st.id].totalMinus);
         });
 
         return stats;
-      }, [students, bonusDeductionEntries, semesterSetting.semester]);
+      }, [students, bonusDeductionList, semesterSetting.semester]);
 
-      const handleRunRandom = async () => {
+      const handleRunRandomStudent = async () => {
         if (!randomClassId) return;
         try {
-          const db = firebase.firestore();
-          const snap = await db.collection('students').where('classId', '==', randomClassId).get();
+          let q = db.collection('students').where('classId', '==', randomClassId);
+          if (currentUser.email !== 'toapt989@gmail.com') {
+            q = q.where('teacherId', '==', currentUser.uid);
+          }
+          const snap = await q.get();
           const list = [];
           snap.forEach(d => list.push({ id: d.id, ...d.data() }));
 
@@ -1017,7 +973,7 @@
             return;
           }
 
-          const count = Math.min(Math.max(1, parseInt(randomQty) || 1), list.length);
+          const count = Math.min(Math.max(1, parseInt(randomCount) || 1), list.length);
           const shuffled = [...list];
           for (let i = shuffled.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -1071,8 +1027,7 @@
             groupScore = totalW > 0 ? round1(sum / (totalW / 100)) : null;
           }
 
-          // 3. QUY ĐỔI THƯỜNG XUYÊN CÁ NHÂN 2 LẦN
-          // Lần 1: Dựa trên tỉ trọng của loại Thường xuyên cá nhân ra điểm CN1
+          // 3. Quy đổi Thường xuyên cá nhân 2 lần
           const cnCols = currentSemCols.filter(c => c.type === 'THUONG_XUYEN_CA_NHAN');
           let cn1 = null;
           if (cnCols.length > 0) {
@@ -1089,7 +1044,6 @@
             cn1 = totalW1 > 0 ? round1(sumCn1 / (totalW1 / 100)) : null;
           }
 
-          // Thường xuyên đột xuất: Tự động cộng tất cả các cột đột xuất đã nhập rồi chia trung bình
           const dxCols = currentSemCols.filter(c => c.type === 'THUONG_XUYEN_DOT_XUAT');
           let dxAvg = null;
           if (dxCols.length > 0) {
@@ -1105,11 +1059,10 @@
             dxAvg = countDx > 0 ? round1(sumDx / countDx) : null;
           }
 
-          // Lần 2: [Thường xuyên đột xuất x Tỉ trọng đột xuất%] + [CN1 x (100 - Tỉ trọng đột xuất)%]
-          const suddenWeightVal = classWeights.suddenWeight !== undefined ? classWeights.suddenWeight : 20;
+          const suddenW = classWeights.suddenWeight !== undefined ? classWeights.suddenWeight : 20;
           let combinedCnScore = null;
           if (cn1 !== null && dxAvg !== null) {
-            combinedCnScore = round1((dxAvg * (suddenWeightVal / 100)) + (cn1 * ((100 - suddenWeightVal) / 100)));
+            combinedCnScore = round1((dxAvg * (suddenW / 100)) + (cn1 * ((100 - suddenW) / 100)));
           } else if (cn1 !== null) {
             combinedCnScore = cn1;
           } else if (dxAvg !== null) {
@@ -1140,7 +1093,7 @@
             CHUYEN_DE: cdScore
           };
 
-          // 5. Áp dụng Điểm cải thiện vào cột quy đổi thấp nhất
+          // 5. Áp dụng điểm cải thiện
           const imp = appliedImprovements[student.id];
           if (imp && imp.score !== null && !isNaN(imp.score)) {
             let lowestKey = null;
@@ -1170,8 +1123,8 @@
             }
           }
 
-          // 6. Áp dụng Điểm cộng & Điểm trừ tích lũy CHỈ vào các cột thường xuyên quy đổi
-          const netBonus = accumulatedBonusDeduction[student.id]?.netPoints || 0;
+          // 6. Áp dụng điểm cộng / trừ tích lũy CHỈ vào các cột thường xuyên quy đổi
+          const netBonus = accumulatedBonusStats[student.id]?.netPoints || 0;
 
           if (netBonus > 0) {
             let bonusRemain = netBonus;
@@ -1225,8 +1178,7 @@
           const midterm = (midE && midE.score !== null) ? midE.score : null;
           const finalScore = (finE && finE.score !== null) ? finE.score : null;
 
-          // 8. CÔNG THỨC TBHK: CHỈ TÍNH CÁC CỘT ĐÃ CÓ ĐIỂM QUY ĐỔI / ĐIỂM THỰC TẾ
-          // Cột TX quy đổi: hệ số 1. Giữa kỳ: hệ số 2. Cuối kỳ: hệ số 3.
+          // 8. Tính TBHK: CHỈ TÍNH CÁC CỘT THỰC TẾ ĐÃ CÓ ĐIỂM
           let weightedSum = 0;
           let totalWeightsCount = 0;
 
@@ -1258,17 +1210,16 @@
             tbhk = round2(weightedSum / totalWeightsCount);
           }
 
-          // Xếp loại học kỳ
           const rankHk = getAcademicRank(tbhk);
 
-          // Tính TBCN nếu ở HK2
+          // 9. Tính TBCN nếu ở HK2
           let tbcn = null;
           let rankCn = '-';
           if (semesterSetting.semester === 'HK2') {
             const hk1Fin = studentScores.find(e => e.semester === 'HK1' && e.scoreType === 'CUOI_KY');
-            const fakeHk1 = (hk1Fin && hk1Fin.score !== null) ? hk1Fin.score : tbhk;
-            if (fakeHk1 !== null && tbhk !== null) {
-              tbcn = round2((fakeHk1 + tbhk * 2) / 3);
+            const pastHk1 = (hk1Fin && hk1Fin.score !== null) ? hk1Fin.score : tbhk;
+            if (pastHk1 !== null && tbhk !== null) {
+              tbcn = round2((pastHk1 + tbhk * 2) / 3);
               rankCn = getAcademicRank(tbcn);
             }
           }
@@ -1288,7 +1239,7 @@
             rankCn
           };
         });
-      }, [students, scoreEntries, scoreColumns, classWeights, appliedImprovements, accumulatedBonusDeduction, semesterSetting, classes, selectedClassId]);
+      }, [students, scoreEntries, scoreColumns, classWeights, appliedImprovements, accumulatedBonusStats, semesterSetting, classes, selectedClassId]);
 
       const handleDownloadExcel = () => {
         const curClass = classes.find(c => c.id === selectedClassId);
@@ -1327,63 +1278,79 @@
         setExcelPreviewOpen(false);
       };
 
+      if (authLoading) {
+        return (
+          <div className="flex h-screen items-center justify-center bg-slate-50">
+            <div className="text-center">
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+              <p className="mt-3 text-sm font-semibold text-slate-600">Đang khởi tạo ứng dụng...</p>
+            </div>
+          </div>
+        );
+      }
+
       return (
-        <div>
-          <header>
-            <h1>SỔ ĐIỂM ĐIỆN TỬ & QUẢN LÝ LỚP HỌC</h1>
-            <div className="header-actions">
+        <div className="min-h-screen bg-slate-50 pb-16">
+          <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 bg-blue-900 px-6 py-3 text-white shadow-md">
+            <div className="flex items-center gap-3">
+              <span className="text-lg font-bold tracking-tight">SỔ ĐIỂM ĐIỆN TỬ & QUẢN LÝ LỚP HỌC</span>
+            </div>
+            <div className="flex items-center gap-3">
               {currentUser ? (
-                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{currentUser.email}</span>
-                  <button className="btn btn-sm btn-danger" onClick={handleLogout}>Đăng xuất</button>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-semibold text-blue-200">{currentUser.email}</span>
+                  <button onClick={handleLogout} className="rounded bg-rose-600 px-3 py-1 text-xs font-semibold text-white shadow hover:bg-rose-700 transition">
+                    Đăng xuất
+                  </button>
                 </div>
               ) : (
-                <button className="btn btn-sm btn-success" onClick={() => setLoginModalOpen(true)}>Đăng nhập Giáo Viên</button>
+                <button onClick={() => setLoginModalOpen(true)} className="rounded bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow hover:bg-emerald-700 transition">
+                  Đăng nhập Giáo Viên
+                </button>
               )}
             </div>
           </header>
 
           {currentUser && (
             <div>
-              <div className="sub-bar">
-                <div className="sub-bar-group">
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-slate-100 px-6 py-2.5 text-xs font-semibold text-slate-700">
+                <div className="flex items-center gap-2">
                   <span>Học kỳ hoạt động:</span>
-                  <button 
-                    className={`btn btn-sm ${semesterSetting.semester === 'HK1' ? 'btn-primary' : 'btn-outline'}`}
+                  <button
                     onClick={() => handleSaveSemesterSetting('HK1', semesterSetting.calculateSpecialTopic)}
+                    className={`rounded px-2.5 py-1 transition ${semesterSetting.semester === 'HK1' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-700 border border-slate-300'}`}
                   >
                     Học kỳ 1
                   </button>
-                  <button 
-                    className={`btn btn-sm ${semesterSetting.semester === 'HK2' ? 'btn-primary' : 'btn-outline'}`}
+                  <button
                     onClick={() => handleSaveSemesterSetting('HK2', semesterSetting.calculateSpecialTopic)}
+                    className={`rounded px-2.5 py-1 transition ${semesterSetting.semester === 'HK2' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-700 border border-slate-300'}`}
                   >
                     Học kỳ 2
                   </button>
                 </div>
 
-                <div className="sub-bar-group">
+                <div className="flex items-center gap-2">
                   <span>Tính chuyên đề trong kỳ:</span>
-                  <button 
-                    className={`btn btn-sm ${semesterSetting.calculateSpecialTopic ? 'btn-success' : 'btn-outline'}`}
+                  <button
                     onClick={() => handleSaveSemesterSetting(semesterSetting.semester, true)}
+                    className={`rounded px-2.5 py-1 transition ${semesterSetting.calculateSpecialTopic ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white text-slate-700 border border-slate-300'}`}
                   >
                     BẬT
                   </button>
-                  <button 
-                    className={`btn btn-sm ${!semesterSetting.calculateSpecialTopic ? 'btn-warning' : 'btn-outline'}`}
+                  <button
                     onClick={() => handleSaveSemesterSetting(semesterSetting.semester, false)}
+                    className={`rounded px-2.5 py-1 transition ${!semesterSetting.calculateSpecialTopic ? 'bg-amber-600 text-white shadow-sm' : 'bg-white text-slate-700 border border-slate-300'}`}
                   >
                     TẮT
                   </button>
                 </div>
 
-                <div className="sub-bar-group">
+                <div className="flex items-center gap-2">
                   <span>Lớp đang chọn:</span>
-                  <select 
-                    className="form-control" 
-                    style={{ width: 170, padding: '4px 8px' }} 
-                    value={selectedClassId} 
+                  <select
+                    className="rounded border border-slate-300 bg-white px-2.5 py-1 font-medium text-slate-800 focus:border-blue-500 focus:outline-none"
+                    value={selectedClassId}
                     onChange={(e) => setSelectedClassId(e.target.value)}
                   >
                     {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -1391,59 +1358,67 @@
                 </div>
               </div>
 
-              <div className="nav-bar">
-                <button className={currentTab === 'DASHBOARD' ? 'active' : ''} onClick={() => setCurrentTab('DASHBOARD')}>Bảng điều khiển</button>
-                <button className={currentTab === 'SCORES' ? 'active' : ''} onClick={() => setCurrentTab('SCORES')}>Bảng điểm & Cột điểm</button>
-                <button className={currentTab === 'GROUPS' ? 'active' : ''} onClick={() => setCurrentTab('GROUPS')}>Nhóm & Điểm nhóm</button>
-                <button className={currentTab === 'RANDOM' ? 'active' : ''} onClick={() => setCurrentTab('RANDOM')}>Random học sinh</button>
-                <button className={currentTab === 'CLASSES' ? 'active' : ''} onClick={() => setCurrentTab('CLASSES')}>Quản lý lớp & HS</button>
-                <button className={currentTab === 'LOOKUP' ? 'active' : ''} onClick={() => setCurrentTab('LOOKUP')}>Tra cứu điểm</button>
+              <div className="no-scrollbar flex overflow-x-auto border-b border-slate-200 bg-white px-6 shadow-sm">
+                <button onClick={() => setCurrentTab('DASHBOARD')} className={`border-b-2 px-4 py-3 text-xs font-semibold transition ${currentTab === 'DASHBOARD' ? 'border-blue-700 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
+                  Bảng điều khiển
+                </button>
+                <button onClick={() => setCurrentTab('SCORES')} className={`border-b-2 px-4 py-3 text-xs font-semibold transition ${currentTab === 'SCORES' ? 'border-blue-700 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
+                  Bảng điểm & Cột điểm
+                </button>
+                <button onClick={() => setCurrentTab('GROUPS')} className={`border-b-2 px-4 py-3 text-xs font-semibold transition ${currentTab === 'GROUPS' ? 'border-blue-700 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
+                  Nhóm & Điểm nhóm
+                </button>
+                <button onClick={() => setCurrentTab('RANDOM')} className={`border-b-2 px-4 py-3 text-xs font-semibold transition ${currentTab === 'RANDOM' ? 'border-blue-700 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
+                  Random học sinh
+                </button>
+                <button onClick={() => setCurrentTab('CLASSES')} className={`border-b-2 px-4 py-3 text-xs font-semibold transition ${currentTab === 'CLASSES' ? 'border-blue-700 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
+                  Quản lý lớp & HS
+                </button>
+                <button onClick={() => setCurrentTab('LOOKUP')} className={`border-b-2 px-4 py-3 text-xs font-semibold transition ${currentTab === 'LOOKUP' ? 'border-blue-700 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-800'}`}>
+                  Tra cứu điểm
+                </button>
               </div>
             </div>
           )}
 
-          <div className="container">
-            {/* Chế độ Khách tra cứu duy nhất */}
+          <div className="mx-auto max-w-7xl px-4 py-6">
             {!currentUser && (
-              <div className="card" style={{ maxWidth: 900, margin: '40px auto' }}>
-                <div className="card-title" style={{ fontSize: '1.25rem', textAlign: 'center', justifyContent: 'center' }}>
-                  TRA CỨU KẾT QUẢ ĐIỂM & LỊCH SỬ HỌC TẬP
-                </div>
-                <p style={{ textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: 24 }}>
-                  Học sinh và phụ huynh nhập chính xác Mã học sinh để tra cứu kết quả điểm mới nhất, lịch sử điểm cộng/trừ và điểm cải thiện.
+              <div className="mx-auto max-w-4xl rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="mb-2 text-center text-lg font-bold text-blue-900">TRA CỨU KẾT QUẢ ĐIỂM & LỊCH SỬ HỌC TẬP</div>
+                <p className="mb-6 text-center text-xs text-slate-500">
+                  Học sinh và phụ huynh nhập chính xác Mã học sinh để xem kết quả điểm mới nhất và lịch sử điểm cộng/trừ/cải thiện.
                 </p>
-                <PublicLookupView semesterSetting={semesterSetting} />
+                <PublicLookupComponent semesterSetting={semesterSetting} />
               </div>
             )}
 
-            {/* Dashboard giáo viên */}
             {currentUser && currentTab === 'DASHBOARD' && (
               <div>
-                <div className="grid-4">
-                  <div className="card text-center">
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Tổng số lớp</div>
-                    <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--primary)' }}>{classes.length}</div>
+                <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+                    <div className="text-xs text-slate-500">Tổng số lớp của bạn</div>
+                    <div className="mt-1 text-2xl font-black text-blue-700">{classes.length}</div>
                   </div>
-                  <div className="card text-center">
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Số HS lớp hiện tại</div>
-                    <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--primary)' }}>{students.length}</div>
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+                    <div className="text-xs text-slate-500">Số HS lớp hiện tại</div>
+                    <div className="mt-1 text-2xl font-black text-blue-700">{students.length}</div>
                   </div>
-                  <div className="card text-center">
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Học kỳ hoạt động</div>
-                    <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--success)' }}>{semesterSetting.semester}</div>
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+                    <div className="text-xs text-slate-500">Học kỳ hoạt động</div>
+                    <div className="mt-1 text-2xl font-black text-emerald-600">{semesterSetting.semester}</div>
                   </div>
-                  <div className="card text-center">
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Tính chuyên đề</div>
-                    <div style={{ fontSize: '1.8rem', fontWeight: 800, color: semesterSetting.calculateSpecialTopic ? 'var(--success)' : 'var(--danger)' }}>
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+                    <div className="text-xs text-slate-500">Tính chuyên đề</div>
+                    <div className={`mt-1 text-2xl font-black ${semesterSetting.calculateSpecialTopic ? 'text-emerald-600' : 'text-rose-600'}`}>
                       {semesterSetting.calculateSpecialTopic ? 'BẬT' : 'TẮT'}
                     </div>
                   </div>
                 </div>
 
-                <div className="card">
-                  <div className="card-title">HỆ THỐNG ĐÃ SẴN SÀNG HOẠT ĐỘNG</div>
-                  <p style={{ lineHeight: 1.6, fontSize: '0.9rem', color: '#334155' }}>
-                    Quy đổi Thường xuyên cá nhân được tự động tính 2 lần (lần 1 theo tỉ trọng cột gốc cá nhân, lần 2 gộp với đột xuất). Công thức tính TBHK tự động chia theo tổng hệ số của những cột thực tế đã có điểm.
+                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <h3 className="mb-2 font-bold text-slate-800">DỮ LIỆU ĐƯỢC CÔ LẬP RIÊNG BIỆT CHO TỪNG GIÁO VIÊN</h3>
+                  <p className="text-xs leading-relaxed text-slate-600">
+                    Tài khoản của bạn chỉ quản lý danh sách lớp, học sinh, nhóm, bảng điểm và lịch sử điểm do chính bạn tạo. Điểm nhóm bảo toàn tuyệt đối bằng bản ghi snapshot; điểm cộng/trừ tích lũy chỉ tác động vào các cột thường xuyên quy đổi; điểm trung bình học kỳ chỉ chia cho tổng hệ số của những cột thực tế đã có điểm.
                   </p>
                 </div>
               </div>
@@ -1451,49 +1426,52 @@
 
             {currentUser && currentTab === 'SCORES' && (
               <div>
-                <div className="card">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                      <span style={{ fontWeight: 600 }}>Thao tác nâng cao:</span>
-                      <button className="btn btn-success btn-sm" onClick={() => openBonusDeductionModal('CONG')}>+ Điểm cộng mới</button>
-                      <button className="btn btn-danger btn-sm" onClick={() => openBonusDeductionModal('TRU')}>- Điểm trừ mới</button>
-                      <button className="btn btn-outline btn-sm" onClick={() => setImprovementModal(true)}>Điểm cải thiện</button>
-                    </div>
-
-                    <button className="btn btn-primary btn-sm" onClick={() => setExcelPreviewOpen(true)}>
-                      Xem trước & Xuất Excel
+                <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-bold text-slate-700">Tác vụ điểm số:</span>
+                    <button onClick={() => openBonusModal('PLUS')} className="rounded bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition">
+                      + Điểm cộng mới
+                    </button>
+                    <button onClick={() => openBonusModal('MINUS')} className="rounded bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 transition">
+                      - Điểm trừ mới
+                    </button>
+                    <button onClick={() => setImprovementModal(true)} className="rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
+                      Điểm cải thiện
                     </button>
                   </div>
+                  <button onClick={() => setExcelPreviewOpen(true)} className="rounded bg-blue-700 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-blue-800 transition">
+                    Xem trước & Xuất Excel
+                  </button>
                 </div>
 
-                {/* Thẻ lưu tổng điểm cộng và điểm trừ tích lũy */}
-                <div className="card">
-                  <div className="card-title">
-                    <span>TỔNG HỢP ĐIỂM CỘNG & ĐIỂM TRỪ TÍCH LŨY ({semesterSetting.semester})</span>
+                {/* Thẻ lưu tổng điểm cộng & trừ tích lũy */}
+                <div className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="mb-3 text-sm font-bold text-blue-900">
+                    TỔNG HỢP ĐIỂM CỘNG & ĐIỂM TRỪ TÍCH LŨY ({semesterSetting.semester})
                   </div>
-                  <div style={{ maxHeight: 220, overflowY: 'auto' }}>
-                    <table>
-                      <thead>
+                  <div className="max-h-56 overflow-y-auto rounded-lg border border-slate-200">
+                    <table className="w-full text-left text-xs">
+                      <thead className="sticky top-0 bg-slate-100 text-slate-700">
                         <tr>
-                          <th>STT</th>
-                          <th>Mã HS</th>
-                          <th>Họ và tên</th>
-                          <th>Tổng điểm cộng</th>
-                          <th>Tổng điểm trừ</th>
-                          <th>Điểm chênh lệch áp dụng</th>
+                          <th className="border-b px-3 py-2">STT</th>
+                          <th className="border-b px-3 py-2">Mã HS</th>
+                          <th className="border-b px-3 py-2">Họ và tên</th>
+                          <th className="border-b px-3 py-2">Tổng điểm cộng</th>
+                          <th className="border-b px-3 py-2">Tổng điểm trừ</th>
+                          <th className="border-b px-3 py-2">Điểm chênh lệch áp dụng</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="divide-y divide-slate-100">
                         {students.map(st => {
-                          const stat = accumulatedBonusDeduction[st.id] || { totalBonus: 0, totalDeduction: 0, netPoints: 0 };
+                          const stat = accumulatedBonusStats[st.id] || { totalPlus: 0, totalMinus: 0, netPoints: 0 };
                           return (
-                            <tr key={st.id}>
-                              <td>{st.orderNumber}</td>
-                              <td style={{ fontWeight: 600 }}>{st.studentCode}</td>
-                              <td>{st.fullName}</td>
-                              <td style={{ color: 'var(--success)', fontWeight: 600 }}>+{stat.totalBonus}đ</td>
-                              <td style={{ color: 'var(--danger)', fontWeight: 600 }}>-{stat.totalDeduction}đ</td>
-                              <td style={{ fontWeight: 700 }}>
+                            <tr key={st.id} className="hover:bg-slate-50">
+                              <td className="px-3 py-2 font-medium text-slate-600">{st.orderNumber}</td>
+                              <td className="px-3 py-2 font-bold text-slate-800">{st.studentCode}</td>
+                              <td className="px-3 py-2 text-slate-800">{st.fullName}</td>
+                              <td className="px-3 py-2 font-semibold text-emerald-600">+{stat.totalPlus}đ</td>
+                              <td className="px-3 py-2 font-semibold text-rose-600">-{stat.totalMinus}đ</td>
+                              <td className="px-3 py-2 font-black text-slate-900">
                                 {stat.netPoints > 0 ? `+${stat.netPoints}đ` : (stat.netPoints < 0 ? `${stat.netPoints}đ` : '0đ')}
                               </td>
                             </tr>
@@ -1505,23 +1483,27 @@
                 </div>
 
                 {/* Tạo cột điểm mới */}
-                <div className="card">
-                  <div className="card-title">TẠO CỘT ĐIỂM MỚI CHO LỚP</div>
-                  <form onSubmit={handleCreateColumn} className="grid-3" style={{ alignItems: 'flex-end' }}>
-                    <div className="form-group">
-                      <label>Tên cột điểm:</label>
-                      <input 
-                        type="text" 
-                        required 
-                        className="form-control" 
-                        placeholder="VD: Kiểm tra thường xuyên 1" 
-                        value={newColName} 
-                        onChange={(e) => setNewColName(e.target.value)} 
+                <div className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="mb-3 text-sm font-bold text-blue-900">TẠO CỘT ĐIỂM MỚI CHO LỚP</div>
+                  <form onSubmit={handleCreateColumn} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold text-slate-700">Tên cột điểm:</label>
+                      <input
+                        type="text"
+                        required
+                        className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-xs focus:border-blue-600 focus:outline-none"
+                        placeholder="VD: Kiểm tra 15 phút, Báo cáo nhóm..."
+                        value={newColName}
+                        onChange={(e) => setNewColName(e.target.value)}
                       />
                     </div>
-                    <div className="form-group">
-                      <label>Loại điểm:</label>
-                      <select className="form-control" value={newColType} onChange={(e) => setNewColType(e.target.value)}>
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold text-slate-700">Loại điểm:</label>
+                      <select
+                        className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-xs focus:border-blue-600 focus:outline-none"
+                        value={newColType}
+                        onChange={(e) => setNewColType(e.target.value)}
+                      >
                         <option value="THUONG_XUYEN_BAO_TRUOC">Thường xuyên báo trước</option>
                         <option value="THUONG_XUYEN_DOT_XUAT">Thường xuyên đột xuất</option>
                         <option value="THUONG_XUYEN_CA_NHAN">Thường xuyên cá nhân</option>
@@ -1531,123 +1513,125 @@
                         <option value="CUOI_KY">Cuối kỳ</option>
                       </select>
                     </div>
-                    <div className="form-group">
-                      <button type="submit" className="btn btn-success" style={{ width: '100%' }}>Thêm cột điểm</button>
+                    <div className="flex items-end">
+                      <button type="submit" className="w-full rounded-md bg-emerald-600 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition">
+                        Thêm cột điểm
+                      </button>
                     </div>
                   </form>
                 </div>
 
-                {/* DANH SÁCH CỘT ĐIỂM GỐC CỦA LỚP & TỈ TRỌNG TÙY Ý */}
-                <div className="card">
-                  <div className="card-title">
-                    <span>DANH SÁCH CỘT ĐIỂM GỐC CỦA LỚP & THIẾT LẬP TỈ TRỌNG</span>
-                    <button className="btn btn-primary btn-sm" onClick={handleSaveWeights}>Lưu tỉ trọng</button>
+                {/* Danh sách cột điểm gốc và thiết lập tỉ trọng */}
+                <div className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                    <span className="text-sm font-bold text-blue-900">DANH SÁCH CỘT ĐIỂM GỐC CỦA LỚP & THIẾT LẬP TỈ TRỌNG</span>
+                    <button onClick={handleSaveWeights} className="rounded bg-blue-700 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-800 transition">
+                      Lưu tỉ trọng
+                    </button>
                   </div>
 
                   {weightNotice.msg && (
-                    <div className={`toast-msg ${weightNotice.type === 'success' ? 'toast-success' : 'toast-error'}`}>
+                    <div className={`mb-3 rounded-md px-3 py-2 text-xs font-semibold ${weightNotice.type === 'success' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-rose-100 text-rose-800 border border-rose-300'}`}>
                       {weightNotice.msg}
                     </div>
                   )}
 
-                  {/* Mục tỉ trọng riêng cho Thường xuyên đột xuất */}
-                  <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8, marginBottom: 16, border: '1px solid var(--border)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                      <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>Tỉ trọng quy đổi Thường xuyên đột xuất (%):</span>
-                      <input 
-                        type="number" 
-                        min="0" 
-                        max="100" 
-                        className="form-control" 
-                        style={{ width: 90, padding: '4px 8px' }} 
-                        value={draftSuddenWeight} 
-                        onChange={(e) => setDraftSuddenWeight(e.target.value)} 
+                  <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <div className="flex flex-wrap items-center gap-3 text-xs">
+                      <span className="font-bold text-slate-800">Tỉ trọng Thường xuyên đột xuất vào điểm Cá nhân (%):</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        className="w-20 rounded border border-slate-300 px-2 py-1 text-center font-bold text-slate-800 focus:outline-none"
+                        value={draftSuddenWeight}
+                        onChange={(e) => setDraftSuddenWeight(e.target.value)}
                       />
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                        Cột đột xuất tự động cộng trung bình, quy đổi TX Cá nhân = [Đột xuất x {draftSuddenWeight}%] + [CN1 x {100 - draftSuddenWeight}%]
+                      <span className="text-slate-500">
+                        Cột đột xuất tự động cộng trung bình; Điểm TX Cá nhân (QĐ) = [Đột xuất × {draftSuddenWeight}%] + [CN1 × {100 - draftSuddenWeight}%]
                       </span>
                     </div>
                   </div>
 
-                  <div className="table-container">
-                    <table>
-                      <thead>
+                  <div className="overflow-x-auto rounded-lg border border-slate-200">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-100 text-slate-700">
                         <tr>
-                          <th>Tên cột điểm</th>
-                          <th>Loại điểm</th>
-                          <th>Học kỳ</th>
-                          <th>Đã nhập</th>
-                          <th style={{ width: 140 }}>Tỉ trọng (%)</th>
-                          <th>Thao tác nhập điểm & Chuyển loại</th>
-                          <th>Xóa cột</th>
+                          <th className="px-3 py-2 font-semibold">Tên cột điểm</th>
+                          <th className="px-3 py-2 font-semibold">Loại điểm</th>
+                          <th className="px-3 py-2 font-semibold">Học kỳ</th>
+                          <th className="px-3 py-2 font-semibold">Đã nhập</th>
+                          <th className="w-32 px-3 py-2 font-semibold">Tỉ trọng (%)</th>
+                          <th className="px-3 py-2 font-semibold">Thao tác nhập điểm & Chuyển loại</th>
+                          <th className="px-3 py-2 font-semibold">Xóa</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="divide-y divide-slate-200">
                         {scoreColumns.length === 0 ? (
-                          <tr><td colSpan={7} className="text-center">Chưa có cột điểm nào</td></tr>
+                          <tr><td colSpan={7} className="px-3 py-4 text-center text-slate-400">Chưa có cột điểm nào</td></tr>
                         ) : (
                           scoreColumns.map(col => {
                             const count = scoreEntries.filter(e => e.scoreColumnId === col.id && e.score !== null).length;
                             const isSudden = col.type === 'THUONG_XUYEN_DOT_XUAT';
                             const isExam = col.type === 'GIUA_KY' || col.type === 'CUOI_KY';
 
-                            // Tỉ trọng mặc định chia đều
                             const sameTypeCols = scoreColumns.filter(c => c.type === col.type && (c.semester === semesterSetting.semester || c.type === 'CHUYEN_DE'));
-                            const defaultEqualWeight = sameTypeCols.length > 0 ? round1(100 / sameTypeCols.length) : 100;
-                            const currentWeightVal = draftWeights[col.id] !== undefined ? draftWeights[col.id] : defaultEqualWeight;
+                            const defaultWeight = sameTypeCols.length > 0 ? round1(100 / sameTypeCols.length) : 100;
+                            const currentVal = draftWeights[col.id] !== undefined ? draftWeights[col.id] : defaultWeight;
 
                             return (
-                              <tr key={col.id}>
-                                <td style={{ fontWeight: 600 }}>{col.name}</td>
-                                <td><span className="badge badge-primary">{col.type}</span></td>
-                                <td>{col.semester}</td>
-                                <td>{count}/{students.length} HS</td>
-                                <td>
+                              <tr key={col.id} className="hover:bg-slate-50">
+                                <td className="px-3 py-2 font-bold text-slate-800">{col.name}</td>
+                                <td className="px-3 py-2"><span className="rounded bg-blue-100 px-2 py-0.5 font-semibold text-blue-800">{col.type}</span></td>
+                                <td className="px-3 py-2 font-medium text-slate-600">{col.semester}</td>
+                                <td className="px-3 py-2 font-semibold text-slate-700">{count}/{students.length} HS</td>
+                                <td className="px-3 py-2">
                                   {isSudden || isExam ? (
-                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Không áp dụng</span>
+                                    <span className="text-slate-400">Không áp dụng</span>
                                   ) : (
-                                    <input 
-                                      type="number" 
-                                      className="form-control" 
-                                      style={{ padding: '3px 8px' }} 
-                                      value={currentWeightVal}
+                                    <input
+                                      type="number"
+                                      className="w-20 rounded border border-slate-300 px-2 py-1 text-center font-bold text-slate-800 focus:outline-none"
+                                      value={currentVal}
                                       onChange={(e) => setDraftWeights({ ...draftWeights, [col.id]: e.target.value })}
                                     />
                                   )}
                                 </td>
-                                <td style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                                  <button 
-                                    className="btn btn-primary btn-sm"
-                                    onClick={() => {
-                                      setActiveColForInput(col);
-                                      setRawScoreString('');
-                                      setParsedPreviewScores(null);
-                                      setStringInputModal(true);
-                                    }}
-                                  >
-                                    Nhập chuỗi
-                                  </button>
-                                  <button 
-                                    className="btn btn-secondary btn-sm"
-                                    onClick={() => openTableInput(col)}
-                                  >
-                                    Nhập bảng
-                                  </button>
-                                  <button 
-                                    className="btn btn-warning btn-sm"
-                                    onClick={() => {
-                                      setColToMove(col);
-                                      setTargetScoreType(col.type);
-                                      setMoveColModalOpen(true);
-                                    }}
-                                  >
-                                    Chuyển loại
-                                  </button>
+                                <td className="px-3 py-2">
+                                  <div className="flex flex-wrap gap-1.5">
+                                    <button
+                                      onClick={() => {
+                                        setActiveColForString(col);
+                                        setRawScoreString('');
+                                        setStringParsedScores(null);
+                                        setStringInputModal(true);
+                                      }}
+                                      className="rounded bg-blue-600 px-2 py-1 text-xs font-semibold text-white hover:bg-blue-700 transition"
+                                    >
+                                      Nhập chuỗi
+                                    </button>
+                                    <button
+                                      onClick={() => openTableInput(col)}
+                                      className="rounded bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700 transition"
+                                    >
+                                      Nhập bảng
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setColToMove(col);
+                                        setTargetColType(col.type);
+                                        setMoveColModal(true);
+                                      }}
+                                      className="rounded bg-amber-600 px-2 py-1 text-xs font-semibold text-white hover:bg-amber-700 transition"
+                                    >
+                                      Chuyển loại
+                                    </button>
+                                  </div>
                                 </td>
-                                <td>
-                                  <button 
-                                    className="btn btn-danger btn-sm"
+                                <td className="px-3 py-2">
+                                  <button
                                     onClick={() => handleDeleteColumn(col)}
+                                    className="rounded bg-rose-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-rose-700 transition"
                                   >
                                     Xóa
                                   </button>
@@ -1661,39 +1645,40 @@
                   </div>
                 </div>
 
-                <div className="card">
-                  <div className="card-title">BẢNG TÍNH ĐIỂM TỔNG HỢP & XẾP LOẠI ({semesterSetting.semester})</div>
-                  <div className="table-container">
-                    <table>
-                      <thead>
+                {/* Bảng tính điểm tổng hợp */}
+                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="mb-3 text-sm font-bold text-blue-900">BẢNG TÍNH ĐIỂM TỔNG HỢP & XẾP LOẠI ({semesterSetting.semester})</div>
+                  <div className="overflow-x-auto rounded-lg border border-slate-200">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-100 text-slate-700">
                         <tr>
-                          <th>STT</th>
-                          <th>Mã HS</th>
-                          <th>Họ và tên</th>
-                          <th>TX Báo trước (QĐ)</th>
-                          <th>Điểm nhóm (QĐ)</th>
-                          <th>TX Cá nhân (QĐ)</th>
-                          {semesterSetting.calculateSpecialTopic && <th>Chuyên đề (QĐ)</th>}
-                          <th>Giữa kỳ (x2)</th>
-                          <th>Cuối kỳ (x3)</th>
-                          <th style={{ backgroundColor: '#fef3c7' }}>TBHK</th>
-                          <th style={{ backgroundColor: '#fef3c7' }}>Xếp loại HK</th>
-                          {semesterSetting.semester === 'HK2' && <th style={{ backgroundColor: '#dcfce7' }}>TBCN</th>}
-                          {semesterSetting.semester === 'HK2' && <th style={{ backgroundColor: '#dcfce7' }}>Xếp loại cả năm</th>}
+                          <th className="px-3 py-2.5 font-bold">STT</th>
+                          <th className="px-3 py-2.5 font-bold">Mã HS</th>
+                          <th className="px-3 py-2.5 font-bold">Họ và tên</th>
+                          <th className="px-3 py-2.5 font-bold">TX Báo trước (QĐ)</th>
+                          <th className="px-3 py-2.5 font-bold">Điểm nhóm (QĐ)</th>
+                          <th className="px-3 py-2.5 font-bold">TX Cá nhân (QĐ)</th>
+                          {semesterSetting.calculateSpecialTopic && <th className="px-3 py-2.5 font-bold">Chuyên đề (QĐ)</th>}
+                          <th className="px-3 py-2.5 font-bold">Giữa kỳ (x2)</th>
+                          <th className="px-3 py-2.5 font-bold">Cuối kỳ (x3)</th>
+                          <th className="bg-amber-100 px-3 py-2.5 font-black text-amber-900">TBHK</th>
+                          <th className="bg-amber-100 px-3 py-2.5 font-black text-amber-900">Xếp loại HK</th>
+                          {semesterSetting.semester === 'HK2' && <th className="bg-emerald-100 px-3 py-2.5 font-black text-emerald-900">TBCN</th>}
+                          {semesterSetting.semester === 'HK2' && <th className="bg-emerald-100 px-3 py-2.5 font-black text-emerald-900">Xếp loại cả năm</th>}
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="divide-y divide-slate-200">
                         {tableCalculations.length === 0 ? (
-                          <tr><td colSpan={13} className="text-center">Chưa có học sinh trong lớp</td></tr>
+                          <tr><td colSpan={13} className="px-3 py-6 text-center text-slate-400">Chưa có học sinh trong lớp</td></tr>
                         ) : (
                           tableCalculations.map(st => {
                             if (!st.hasAnyScore) {
                               return (
-                                <tr key={st.studentId}>
-                                  <td>{st.orderNumber}</td>
-                                  <td style={{ fontWeight: 600 }}>{st.studentCode}</td>
-                                  <td>{st.fullName}</td>
-                                  <td colSpan={semesterSetting.semester === 'HK2' ? 10 : 8} style={{ textAlign: 'center', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                                <tr key={st.studentId} className="hover:bg-slate-50">
+                                  <td className="px-3 py-2 font-medium text-slate-600">{st.orderNumber}</td>
+                                  <td className="px-3 py-2 font-bold text-slate-800">{st.studentCode}</td>
+                                  <td className="px-3 py-2 font-semibold text-slate-900">{st.fullName}</td>
+                                  <td colSpan={semesterSetting.semester === 'HK2' ? 10 : 8} className="px-3 py-2 text-center italic text-slate-400">
                                     Chưa có cột điểm nào
                                   </td>
                                 </tr>
@@ -1701,35 +1686,39 @@
                             }
 
                             return (
-                              <tr key={st.studentId}>
-                                <td>{st.orderNumber}</td>
-                                <td style={{ fontWeight: 600 }}>{st.studentCode}</td>
-                                <td>{st.fullName}</td>
-                                <td>{formatScore(st.convertedMap.THUONG_XUYEN_BAO_TRUOC)}</td>
-                                <td>{formatScore(st.convertedMap.DIEM_NHOM)}</td>
-                                <td>{formatScore(st.convertedMap.THUONG_XUYEN_CA_NHAN)}</td>
+                              <tr key={st.studentId} className="hover:bg-slate-50">
+                                <td className="px-3 py-2 font-medium text-slate-600">{st.orderNumber}</td>
+                                <td className="px-3 py-2 font-bold text-slate-800">{st.studentCode}</td>
+                                <td className="px-3 py-2 font-semibold text-slate-900">{st.fullName}</td>
+                                <td className="px-3 py-2 font-medium">{formatScore(st.convertedMap.THUONG_XUYEN_BAO_TRUOC)}</td>
+                                <td className="px-3 py-2 font-medium">{formatScore(st.convertedMap.DIEM_NHOM)}</td>
+                                <td className="px-3 py-2 font-medium">{formatScore(st.convertedMap.THUONG_XUYEN_CA_NHAN)}</td>
                                 {semesterSetting.calculateSpecialTopic && (
-                                  <td>{formatScore(st.convertedMap.CHUYEN_DE)}</td>
+                                  <td className="px-3 py-2 font-medium">{formatScore(st.convertedMap.CHUYEN_DE)}</td>
                                 )}
-                                <td>{formatScore(st.midterm)}</td>
-                                <td>{formatScore(st.finalScore)}</td>
-                                <td style={{ fontWeight: 700, backgroundColor: '#fef3c7' }}>
+                                <td className="px-3 py-2 font-medium">{formatScore(st.midterm)}</td>
+                                <td className="px-3 py-2 font-medium">{formatScore(st.finalScore)}</td>
+                                <td className="bg-amber-50 px-3 py-2 font-black text-amber-900">
                                   {st.tbhk !== null ? formatScore(st.tbhk) : 'Chưa có'}
                                 </td>
-                                <td style={{ backgroundColor: '#fef3c7' }}>
+                                <td className="bg-amber-50 px-3 py-2">
                                   {st.tbhk !== null ? (
-                                    <span className={`badge ${getRankBadgeClass(st.rankHk)}`}>{st.rankHk}</span>
+                                    <span className={`inline-block rounded border px-2 py-0.5 text-xs font-bold ${getRankBadge(st.rankHk)}`}>
+                                      {st.rankHk}
+                                    </span>
                                   ) : '-'}
                                 </td>
                                 {semesterSetting.semester === 'HK2' && (
-                                  <td style={{ fontWeight: 700, backgroundColor: '#dcfce7' }}>
+                                  <td className="bg-emerald-50 px-3 py-2 font-black text-emerald-900">
                                     {st.tbcn !== null ? formatScore(st.tbcn) : 'Chưa đủ'}
                                   </td>
                                 )}
                                 {semesterSetting.semester === 'HK2' && (
-                                  <td style={{ backgroundColor: '#dcfce7' }}>
+                                  <td className="bg-emerald-50 px-3 py-2">
                                     {st.tbcn !== null ? (
-                                      <span className={`badge ${getRankBadgeClass(st.rankCn)}`}>{st.rankCn}</span>
+                                      <span className={`inline-block rounded border px-2 py-0.5 text-xs font-bold ${getRankBadge(st.rankCn)}`}>
+                                        {st.rankCn}
+                                      </span>
                                     ) : '-'}
                                   </td>
                                 )}
@@ -1745,28 +1734,28 @@
             )}
 
             {currentUser && currentTab === 'GROUPS' && (
-              <div>
-                <div className="card">
-                  <div className="card-title">TẠO NHÓM MỚI VÀ CHỌN THÀNH VIÊN</div>
-                  <form onSubmit={handleCreateGroup}>
-                    <div className="form-group" style={{ maxWidth: 360 }}>
-                      <label>Tên nhóm:</label>
-                      <input 
-                        type="text" 
-                        required 
-                        className="form-control" 
-                        placeholder="Ví dụ: Nhóm 1, Nhóm A..." 
-                        value={newGroupName} 
-                        onChange={(e) => setNewGroupName(e.target.value)} 
+              <div className="space-y-6">
+                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="mb-3 text-sm font-bold text-blue-900">TẠO NHÓM MỚI VÀ CHỌN THÀNH VIÊN</div>
+                  <form onSubmit={handleCreateGroup} className="space-y-3">
+                    <div className="max-w-md">
+                      <label className="mb-1 block text-xs font-semibold text-slate-700">Tên nhóm:</label>
+                      <input
+                        type="text"
+                        required
+                        className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-xs focus:border-blue-600 focus:outline-none"
+                        placeholder="Ví dụ: Nhóm 1, Nhóm A..."
+                        value={newGroupName}
+                        onChange={(e) => setNewGroupName(e.target.value)}
                       />
                     </div>
-                    <div className="form-group">
-                      <label>Chọn học sinh vào nhóm:</label>
-                      <div className="grid-4" style={{ maxHeight: 200, overflowY: 'auto', padding: 8, border: '1px solid var(--border)', borderRadius: 6 }}>
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold text-slate-700">Chọn thành viên:</label>
+                      <div className="grid max-h-48 grid-cols-2 gap-2 overflow-y-auto rounded-md border border-slate-200 p-2 sm:grid-cols-4">
                         {students.map(st => (
-                          <label key={st.id} style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: '0.85rem' }}>
-                            <input 
-                              type="checkbox" 
+                          <label key={st.id} className="flex items-center gap-1.5 text-xs text-slate-700">
+                            <input
+                              type="checkbox"
                               checked={selectedGroupMembers.includes(st.id)}
                               onChange={(e) => {
                                 if (e.target.checked) {
@@ -1776,33 +1765,35 @@
                                 }
                               }}
                             />
-                            {st.orderNumber}. {st.fullName}
+                            <span>{st.orderNumber}. {st.fullName}</span>
                           </label>
                         ))}
                       </div>
                     </div>
-                    <button type="submit" className="btn btn-primary">Tạo nhóm</button>
+                    <button type="submit" className="rounded bg-blue-700 px-4 py-1.5 text-xs font-semibold text-white hover:bg-blue-800 transition">
+                      Tạo nhóm
+                    </button>
                   </form>
                 </div>
 
-                <div className="card">
-                  <div className="card-title">DANH SÁCH NHÓM & NHẬP ĐIỂM NHÓM KÈM TRẠNG THÁI THAM GIA</div>
-                  <div className="grid-2">
+                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="mb-3 text-sm font-bold text-blue-900">DANH SÁCH NHÓM & NHẬP ĐIỂM NHÓM KÈM SNAPSHOT</div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     {groups.map(grp => (
-                      <div key={grp.id} style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 16 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                          <h4 style={{ color: 'var(--primary)' }}>{grp.name}</h4>
-                          <button className="btn btn-danger btn-sm" onClick={() => handleDissolveGroup(grp.id)}>Giải tán nhóm</button>
+                      <div key={grp.id} className="rounded-lg border border-slate-200 p-4">
+                        <div className="mb-2 flex items-center justify-between">
+                          <h4 className="font-bold text-blue-900">{grp.name}</h4>
+                          <button onClick={() => handleDissolveGroup(grp.id)} className="rounded bg-rose-600 px-2 py-0.5 text-xs font-semibold text-white hover:bg-rose-700 transition">
+                            Giải tán nhóm
+                          </button>
                         </div>
-                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 12 }}>
-                          Số thành viên: {grp.memberStudentIds?.length || 0}
-                        </div>
-                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        <div className="mb-3 text-xs text-slate-500">Số thành viên: {grp.memberStudentIds?.length || 0}</div>
+                        <div className="flex flex-wrap gap-1.5">
                           {scoreColumns.filter(c => c.type === 'DIEM_NHOM').map(c => (
-                            <button 
-                              key={c.id} 
-                              className="btn btn-outline btn-sm"
-                              onClick={() => openGroupScoreInput(c, grp)}
+                            <button
+                              key={c.id}
+                              onClick={() => openGroupScoreInputModal(c, grp)}
+                              className="rounded border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
                             >
                               Nhập điểm: {c.name}
                             </button>
@@ -1816,36 +1807,32 @@
             )}
 
             {currentUser && currentTab === 'RANDOM' && (
-              <div className="card">
-                <div className="card-title">RANDOM HỌC SINH THEO LỚP HỌC</div>
-                <div className="grid-3" style={{ alignItems: 'flex-end', marginBottom: 20 }}>
-                  <div className="form-group">
-                    <label>Chọn lớp học:</label>
-                    <select 
-                      className="form-control" 
-                      value={randomClassId} 
+              <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="mb-3 text-sm font-bold text-blue-900">RANDOM HỌC SINH THEO LỚP HỌC</div>
+                <div className="mb-6 grid grid-cols-1 items-end gap-3 sm:grid-cols-3">
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-slate-700">Chọn lớp học:</label>
+                    <select
+                      className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-xs focus:border-blue-600 focus:outline-none"
+                      value={randomClassId}
                       onChange={(e) => setRandomClassId(e.target.value)}
                     >
-                      {classes.map(c => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
+                      {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
-
-                  <div className="form-group">
-                    <label>Số lượng học sinh cần random:</label>
-                    <input 
-                      type="number" 
-                      min="1" 
-                      max="100" 
-                      className="form-control" 
-                      value={randomQty} 
-                      onChange={(e) => setRandomQty(e.target.value)}
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-slate-700">Số lượng học sinh cần chọn:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-xs focus:border-blue-600 focus:outline-none"
+                      value={randomCount}
+                      onChange={(e) => setRandomCount(e.target.value)}
                     />
                   </div>
-
-                  <div className="form-group">
-                    <button className="btn btn-primary" style={{ width: '100%' }} onClick={handleRunRandom}>
+                  <div>
+                    <button onClick={handleRunRandomStudent} className="w-full rounded-md bg-blue-700 py-1.5 text-xs font-semibold text-white hover:bg-blue-800 transition">
                       Bắt đầu chọn ngẫu nhiên
                     </button>
                   </div>
@@ -1853,15 +1840,13 @@
 
                 {randomResults.length > 0 && (
                   <div>
-                    <h3 style={{ fontSize: '0.95rem', marginBottom: 12, color: 'var(--success)' }}>
-                      KẾT QUẢ ĐÃ CHỌN {randomResults.length} HỌC SINH NGẪU NHIÊN:
-                    </h3>
-                    <div className="grid-3">
+                    <div className="mb-3 font-bold text-emerald-700">KẾT QUẢ ĐÃ CHỌN {randomResults.length} HỌC SINH NGẪU NHIÊN:</div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                       {randomResults.map(st => (
-                        <div key={st.id} className="random-box">
-                          <div className="random-num">STT: {st.orderNumber}</div>
-                          <div className="random-name">{st.fullName}</div>
-                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Mã HS: {st.studentCode}</div>
+                        <div key={st.id} className="rounded-lg border-2 border-dashed border-blue-400 bg-blue-50 p-4 text-center">
+                          <div className="text-xl font-black text-blue-700">STT: {st.orderNumber}</div>
+                          <div className="mt-1 font-bold text-slate-900">{st.fullName}</div>
+                          <div className="text-xs text-slate-500">Mã HS: {st.studentCode}</div>
                         </div>
                       ))}
                     </div>
@@ -1871,78 +1856,80 @@
             )}
 
             {currentUser && currentTab === 'CLASSES' && (
-              <div>
-                <div className="grid-2">
-                  <div className="card">
-                    <div className="card-title">TẠO LỚP HỌC MỚI</div>
-                    <form onSubmit={handleCreateClass}>
-                      <div className="form-group">
-                        <label>Tên lớp:</label>
-                        <input 
-                          type="text" 
-                          required 
-                          className="form-control" 
-                          placeholder="Ví dụ: 10A1, 11B2..." 
-                          value={newClassName} 
-                          onChange={(e) => setNewClassName(e.target.value)} 
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div className="mb-3 text-sm font-bold text-blue-900">TẠO LỚP HỌC MỚI</div>
+                    <form onSubmit={handleCreateClass} className="space-y-3">
+                      <div>
+                        <label className="mb-1 block text-xs font-semibold text-slate-700">Tên lớp:</label>
+                        <input
+                          type="text"
+                          required
+                          className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-xs focus:border-blue-600 focus:outline-none"
+                          placeholder="Ví dụ: 10A1, 11B2..."
+                          value={newClassName}
+                          onChange={(e) => setNewClassName(e.target.value)}
                         />
                       </div>
-                      <div className="form-group">
-                        <label>Lớp có học chuyên đề?</label>
-                        <select 
-                          className="form-control" 
-                          value={newClassSpecial ? 'YES' : 'NO'} 
+                      <div>
+                        <label className="mb-1 block text-xs font-semibold text-slate-700">Lớp có học chuyên đề?</label>
+                        <select
+                          className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-xs focus:border-blue-600 focus:outline-none"
+                          value={newClassSpecial ? 'YES' : 'NO'}
                           onChange={(e) => setNewClassSpecial(e.target.value === 'YES')}
                         >
                           <option value="YES">Có học chuyên đề</option>
                           <option value="NO">Không học chuyên đề</option>
                         </select>
                       </div>
-                      <button type="submit" className="btn btn-success">Lưu lớp học</button>
+                      <button type="submit" className="rounded bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition">
+                        Lưu lớp học
+                      </button>
                     </form>
                   </div>
 
-                  <div className="card">
-                    <div className="card-title">NHẬP DANH SÁCH HỌC SINH THEO STT</div>
-                    <form onSubmit={handleImportStudents}>
-                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 8 }}>
-                        Định dạng mỗi dòng: STT,Mã HS,Họ và tên
-                      </p>
-                      <div className="form-group">
-                        <textarea 
-                          className="form-control" 
-                          rows={4} 
-                          placeholder="1,HS001,Nguyễn Văn An&#10;2,HS002,Trần Thị Bình"
-                          value={importRawStudents}
-                          onChange={(e) => setImportRawStudents(e.target.value)}
-                        />
-                      </div>
-                      {importError && <div style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: 8 }}>{importError}</div>}
-                      <button type="submit" className="btn btn-primary">Lưu học sinh vào lớp đang chọn</button>
+                  <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div className="mb-3 text-sm font-bold text-blue-900">NHẬP DANH SÁCH HỌC SINH THEO STT</div>
+                    <form onSubmit={handleImportStudents} className="space-y-3">
+                      <p className="text-xs text-slate-500">Định dạng mỗi dòng: STT,Mã HS,Họ và tên</p>
+                      <textarea
+                        className="w-full rounded-md border border-slate-300 p-2.5 text-xs focus:border-blue-600 focus:outline-none"
+                        rows={4}
+                        placeholder="1,HS001,Nguyễn Văn An&#10;2,HS002,Trần Thị Bình"
+                        value={importRawStudents}
+                        onChange={(e) => setImportRawStudents(e.target.value)}
+                      />
+                      {importError && <div className="text-xs font-semibold text-rose-600">{importError}</div>}
+                      <button type="submit" className="rounded bg-blue-700 px-4 py-1.5 text-xs font-semibold text-white hover:bg-blue-800 transition">
+                        Lưu học sinh vào lớp đang chọn
+                      </button>
                     </form>
                   </div>
                 </div>
 
-                <div className="card">
-                  <div className="card-title">
-                    <span>DANH SÁCH HỌC SINH CỦA LỚP ({students.length} HỌC SINH)</span>
-                    <button className="btn btn-danger btn-sm" onClick={() => handleDeleteClass(selectedClassId)}>Xóa lớp này</button>
+                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-sm font-bold text-blue-900">DANH SÁCH HỌC SINH CỦA LỚP ({students.length} HỌC SINH)</span>
+                    <button onClick={() => handleDeleteClass(selectedClassId)} className="rounded bg-rose-600 px-3 py-1 text-xs font-semibold text-white hover:bg-rose-700 transition">
+                      Xóa lớp này
+                    </button>
                   </div>
-                  <div className="table-container">
-                    <table>
-                      <thead>
+                  <div className="overflow-x-auto rounded-lg border border-slate-200">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-100 text-slate-700">
                         <tr>
-                          <th>STT</th>
-                          <th>Mã HS</th>
-                          <th>Họ và tên</th>
+                          <th className="px-3 py-2 font-bold">STT</th>
+                          <th className="px-3 py-2 font-bold">Mã HS</th>
+                          <th className="px-3 py-2 font-bold">Họ và tên</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="divide-y divide-slate-200">
                         {students.map(s => (
-                          <tr key={s.id}>
-                            <td>{s.orderNumber}</td>
-                            <td style={{ fontWeight: 600 }}>{s.studentCode}</td>
-                            <td>{s.fullName}</td>
+                          <tr key={s.id} className="hover:bg-slate-50">
+                            <td className="px-3 py-2 font-medium text-slate-600">{s.orderNumber}</td>
+                            <td className="px-3 py-2 font-bold text-slate-800">{s.studentCode}</td>
+                            <td className="px-3 py-2 font-medium text-slate-800">{s.fullName}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1952,142 +1939,117 @@
               </div>
             )}
 
-            {/* Tra cứu khi đã đăng nhập */}
             {currentUser && currentTab === 'LOOKUP' && (
-              <div className="card">
-                <div className="card-title">TRA CỨU KẾT QUẢ ĐIỂM HỌC TẬP</div>
-                <PublicLookupView semesterSetting={semesterSetting} />
+              <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="mb-3 text-sm font-bold text-blue-900">TRA CỨU KẾT QUẢ ĐIỂM HỌC TẬP</div>
+                <PublicLookupComponent semesterSetting={semesterSetting} />
               </div>
             )}
-
           </div>
 
-          {/* Modal Đăng nhập */}
           {loginModalOpen && (
-            <div className="modal-overlay">
-              <div className="modal-box" style={{ maxWidth: 400 }}>
-                <div className="modal-header">
-                  <h3>Đăng nhập Giáo Viên</h3>
-                  <button className="modal-close" onClick={() => setLoginModalOpen(false)}>×</button>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+                <div className="mb-4 flex items-center justify-between border-b pb-2">
+                  <h3 className="font-bold text-slate-900">Đăng nhập Giáo Viên</h3>
+                  <button onClick={() => setLoginModalOpen(false)} className="text-slate-400 hover:text-slate-600">×</button>
                 </div>
-                {loginError && <div style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: 12 }}>{loginError}</div>}
-                <form onSubmit={handleLogin}>
-                  <div className="form-group">
-                    <label>Email tài khoản:</label>
-                    <input 
-                      type="email" 
-                      required 
-                      className="form-control" 
-                      placeholder="teacher@sodiem.edu.vn" 
-                      value={loginEmail} 
-                      onChange={(e) => setLoginEmail(e.target.value)} 
+                {loginError && <div className="mb-3 text-xs font-semibold text-rose-600">{loginError}</div>}
+                <form onSubmit={handleLogin} className="space-y-3">
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-slate-700">Email:</label>
+                    <input
+                      type="email"
+                      required
+                      className="w-full rounded border border-slate-300 px-3 py-1.5 text-xs focus:outline-none"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
                     />
                   </div>
-                  <div className="form-group">
-                    <label>Mật khẩu:</label>
-                    <input 
-                      type="password" 
-                      required 
-                      className="form-control" 
-                      placeholder="••••••••" 
-                      value={loginPass} 
-                      onChange={(e) => setLoginPass(e.target.value)} 
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-slate-700">Mật khẩu:</label>
+                    <input
+                      type="password"
+                      required
+                      className="w-full rounded border border-slate-300 px-3 py-1.5 text-xs focus:outline-none"
+                      value={loginPass}
+                      onChange={(e) => setLoginPass(e.target.value)}
                     />
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-                    <button type="button" className="btn btn-secondary" onClick={() => setLoginModalOpen(false)}>Hủy</button>
-                    <button type="submit" className="btn btn-primary" disabled={loginSubmitting}>
-                      {loginSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
-                    </button>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button type="button" onClick={() => setLoginModalOpen(false)} className="rounded border border-slate-300 px-3 py-1.5 text-xs font-medium">Hủy</button>
+                    <button type="submit" className="rounded bg-blue-700 px-4 py-1.5 text-xs font-semibold text-white hover:bg-blue-800">Đăng nhập</button>
                   </div>
                 </form>
               </div>
             </div>
           )}
 
-          {/* Modal Hộp thoại xác nhận xóa an toàn */}
           {confirmModal.open && (
-            <div className="modal-overlay">
-              <div className="modal-box" style={{ maxWidth: 440 }}>
-                <div className="modal-header">
-                  <h3 style={{ color: 'var(--danger)' }}>{confirmModal.title}</h3>
-                  <button className="modal-close" onClick={() => setConfirmModal(prev => ({ ...prev, open: false }))}>×</button>
-                </div>
-                <p style={{ fontSize: '0.9rem', lineHeight: 1.5, marginBottom: 20 }}>
-                  {confirmModal.message}
-                </p>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-                  <button className="btn btn-secondary" onClick={() => setConfirmModal(prev => ({ ...prev, open: false }))}>Hủy</button>
-                  <button className="btn btn-danger" onClick={confirmModal.onConfirm}>Xác nhận xóa</button>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+                <h3 className="mb-2 font-bold text-rose-600">{confirmModal.title}</h3>
+                <p className="mb-4 text-xs leading-relaxed text-slate-600">{confirmModal.message}</p>
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => setConfirmModal(prev => ({ ...prev, open: false }))} className="rounded border border-slate-300 px-3 py-1.5 text-xs font-medium">Hủy</button>
+                  <button onClick={confirmModal.onConfirm} className="rounded bg-rose-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-rose-700">Xác nhận xóa</button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Modal Ghi điểm cộng / Điểm trừ mới */}
-          {bonusDeductionModal && (
-            <div className="modal-overlay">
-              <div className="modal-box" style={{ maxWidth: 680 }}>
-                <div className="modal-header">
-                  <h3>{actionType === 'CONG' ? 'Ghi nhận Điểm Cộng Mới' : 'Ghi nhận Điểm Trừ Mới'} ({semesterSetting.semester})</h3>
-                  <button className="modal-close" onClick={() => setBonusDeductionModal(false)}>×</button>
+          {bonusModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl">
+                <div className="mb-4 flex items-center justify-between border-b pb-2">
+                  <h3 className="font-bold text-slate-900">
+                    {bonusActionType === 'PLUS' ? 'Ghi nhận Điểm Cộng Mới' : 'Ghi nhận Điểm Trừ Mới'} ({semesterSetting.semester})
+                  </h3>
+                  <button onClick={() => setBonusModalOpen(false)} className="text-slate-400 hover:text-slate-600">×</button>
                 </div>
 
-                {bonusDeductionNotice && (
-                  <div className="toast-msg toast-error">
-                    {bonusDeductionNotice}
-                  </div>
-                )}
+                {bonusNotice && <div className="mb-3 rounded bg-rose-50 p-2 text-xs font-semibold text-rose-600 border border-rose-200">{bonusNotice}</div>}
 
-                <div className="form-group">
-                  <label>Lý do {actionType === 'CONG' ? 'cộng điểm' : 'trừ điểm'}:</label>
-                  <input 
-                    type="text" 
-                    required 
-                    className="form-control" 
-                    placeholder="VD: Phát biểu xây dựng bài sôi nổi, đi học muộn..." 
-                    value={bonusDeductionReason} 
-                    onChange={(e) => setBonusDeductionReason(e.target.value)} 
+                <div className="mb-3">
+                  <label className="mb-1 block text-xs font-semibold text-slate-700">Lý do:</label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full rounded border border-slate-300 px-3 py-1.5 text-xs focus:outline-none"
+                    placeholder="VD: Phát biểu bài tích cực, nộp bài muộn..."
+                    value={bonusReason}
+                    onChange={(e) => setBonusReason(e.target.value)}
                   />
                 </div>
 
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 10 }}>
-                  Chọn mức điểm cho từng học sinh. Học sinh không được chọn mặc định tính là 0 điểm.
-                </p>
-
-                <div style={{ maxHeight: 320, overflowY: 'auto', marginBottom: 16 }}>
-                  <table>
-                    <thead>
+                <div className="max-h-64 overflow-y-auto rounded border border-slate-200 mb-4">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-100 text-slate-700 sticky top-0">
                       <tr>
-                        <th>STT</th>
-                        <th>Mã HS</th>
-                        <th>Họ và tên</th>
-                        <th>Mức {actionType === 'CONG' ? 'cộng' : 'trừ'}</th>
+                        <th className="px-3 py-2">STT</th>
+                        <th className="px-3 py-2">Mã HS</th>
+                        <th className="px-3 py-2">Họ và tên</th>
+                        <th className="px-3 py-2">Mức {bonusActionType === 'PLUS' ? 'cộng' : 'trừ'}</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-slate-100">
                       {students.map(st => (
                         <tr key={st.id}>
-                          <td>{st.orderNumber}</td>
-                          <td>{st.studentCode}</td>
-                          <td>{st.fullName}</td>
-                          <td>
-                            <div style={{ display: 'flex', gap: 6 }}>
+                          <td className="px-3 py-2 font-medium">{st.orderNumber}</td>
+                          <td className="px-3 py-2 font-bold">{st.studentCode}</td>
+                          <td className="px-3 py-2">{st.fullName}</td>
+                          <td className="px-3 py-2">
+                            <div className="flex gap-1.5">
                               {[0.25, 0.5, 0.75, 1.0].map(pts => {
-                                const isSelected = bonusDeductionSelections[st.id] === pts;
+                                const isSel = bonusSelections[st.id] === pts;
                                 return (
-                                  <button 
-                                    key={pts} 
-                                    type="button" 
-                                    className={`btn btn-sm ${isSelected ? (actionType === 'CONG' ? 'btn-success' : 'btn-danger') : 'btn-outline'}`}
-                                    onClick={() => {
-                                      setBonusDeductionSelections({
-                                        ...bonusDeductionSelections,
-                                        [st.id]: isSelected ? 0 : pts
-                                      });
-                                    }}
+                                  <button
+                                    key={pts}
+                                    type="button"
+                                    onClick={() => setBonusSelections({ ...bonusSelections, [st.id]: isSel ? 0 : pts })}
+                                    className={`rounded px-2 py-0.5 text-xs font-semibold transition ${isSel ? (bonusActionType === 'PLUS' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white') : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
                                   >
-                                    {actionType === 'CONG' ? `+${pts}` : `-${pts}`}đ
+                                    {bonusActionType === 'PLUS' ? `+${pts}` : `-${pts}`}đ
                                   </button>
                                 );
                               })}
@@ -2099,31 +2061,28 @@
                   </table>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                  <button className="btn btn-secondary" onClick={() => setBonusDeductionModal(false)}>Hủy</button>
-                  <button className="btn btn-primary" onClick={handleSaveBonusDeduction}>Lưu bản ghi</button>
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => setBonusModalOpen(false)} className="rounded border border-slate-300 px-3 py-1.5 text-xs font-medium">Hủy</button>
+                  <button onClick={handleSaveBonusDeduction} className="rounded bg-blue-700 px-4 py-1.5 text-xs font-semibold text-white hover:bg-blue-800">Lưu bản ghi</button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Modal Chuyển loại cột điểm */}
-          {moveColModalOpen && colToMove && (
-            <div className="modal-overlay">
-              <div className="modal-box" style={{ maxWidth: 480 }}>
-                <div className="modal-header">
-                  <h3>Chuyển loại cột điểm</h3>
-                  <button className="modal-close" onClick={() => setMoveColModalOpen(false)}>×</button>
+          {moveColModal && colToMove && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+                <div className="mb-3 flex items-center justify-between border-b pb-2">
+                  <h3 className="font-bold text-slate-900">Chuyển loại cột điểm</h3>
+                  <button onClick={() => setMoveColModal(false)} className="text-slate-400 hover:text-slate-600">×</button>
                 </div>
-                <p style={{ fontSize: '0.9rem', marginBottom: 12 }}>
-                  Cột: <strong>{colToMove.name}</strong> (Hiện tại: <span className="badge badge-primary">{colToMove.type}</span>)
-                </p>
-                <div className="form-group">
-                  <label>Chọn loại điểm đích cần chuyển sang:</label>
-                  <select 
-                    className="form-control" 
-                    value={targetScoreType} 
-                    onChange={(e) => setTargetScoreType(e.target.value)}
+                <div className="mb-3 text-xs">Cột: <strong>{colToMove.name}</strong> (Hiện tại: {colToMove.type})</div>
+                <div className="mb-4">
+                  <label className="mb-1 block text-xs font-semibold text-slate-700">Chọn loại đích:</label>
+                  <select
+                    className="w-full rounded border border-slate-300 px-2.5 py-1.5 text-xs focus:outline-none"
+                    value={targetColType}
+                    onChange={(e) => setTargetColType(e.target.value)}
                   >
                     <option value="THUONG_XUYEN_BAO_TRUOC">Thường xuyên báo trước</option>
                     <option value="THUONG_XUYEN_DOT_XUAT">Thường xuyên đột xuất</option>
@@ -2134,58 +2093,47 @@
                     <option value="CUOI_KY">Cuối kỳ</option>
                   </select>
                 </div>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 16 }}>
-                  Hệ thống bảo toàn nguyên vẹn toàn bộ điểm số học sinh đã được nhập trước đó.
-                </p>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                  <button className="btn btn-secondary" onClick={() => setMoveColModalOpen(false)}>Hủy</button>
-                  <button className="btn btn-primary" onClick={handleExecuteChangeColumnType}>Xác nhận chuyển</button>
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => setMoveColModal(false)} className="rounded border border-slate-300 px-3 py-1.5 text-xs font-medium">Hủy</button>
+                  <button onClick={handleExecuteChangeColumnType} className="rounded bg-blue-700 px-4 py-1.5 text-xs font-semibold text-white hover:bg-blue-800">Xác nhận chuyển</button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Modal Nhập chuỗi */}
-          {stringInputModal && activeColForInput && (
-            <div className="modal-overlay">
-              <div className="modal-box">
-                <div className="modal-header">
-                  <h3>Nhập điểm chuỗi: {activeColForInput.name}</h3>
-                  <button className="modal-close" onClick={() => setStringInputModal(false)}>×</button>
+          {stringInputModal && activeColForString && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-xl rounded-xl bg-white p-6 shadow-xl">
+                <div className="mb-3 flex items-center justify-between border-b pb-2">
+                  <h3 className="font-bold text-slate-900">Nhập điểm chuỗi: {activeColForString.name}</h3>
+                  <button onClick={() => setStringInputModal(false)} className="text-slate-400 hover:text-slate-600">×</button>
                 </div>
-                <p style={{ fontSize: '0.85rem', marginBottom: 10 }}>
-                  Nhập danh sách điểm phân tách bằng dấu cách theo đúng STT của {students.length} học sinh. Ví dụ: 8 7.5 9 6,5
-                </p>
-                <div className="form-group">
-                  <textarea 
-                    className="form-control" 
-                    rows={4} 
-                    placeholder="8 7.5 9 6,5 10..." 
-                    value={rawScoreString} 
-                    onChange={(e) => setRawScoreString(e.target.value)} 
-                  />
-                </div>
-                {stringInputError && <div style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: 10 }}>{stringInputError}</div>}
-                
-                <div style={{ marginBottom: 16 }}>
-                  <button type="button" className="btn btn-primary btn-sm" onClick={handlePreviewScoreString}>
-                    Kiểm tra và xem trước
-                  </button>
+                <p className="mb-2 text-xs text-slate-500">Nhập các điểm số phân tách bằng dấu cách theo đúng STT của {students.length} học sinh.</p>
+                <textarea
+                  className="mb-2 w-full rounded border border-slate-300 p-2 text-xs focus:outline-none"
+                  rows={3}
+                  placeholder="8 7,5 9 6,5 10..."
+                  value={rawScoreString}
+                  onChange={(e) => setRawScoreString(e.target.value)}
+                />
+                {stringInputError && <div className="mb-2 text-xs font-semibold text-rose-600">{stringInputError}</div>}
+                <div className="mb-3">
+                  <button onClick={handlePreviewScoreString} className="rounded bg-slate-700 px-3 py-1 text-xs font-semibold text-white">Kiểm tra xem trước</button>
                 </div>
 
-                {parsedPreviewScores && (
-                  <div style={{ maxHeight: 200, overflowY: 'auto', marginBottom: 16 }}>
-                    <table>
-                      <thead>
-                        <tr><th>STT</th><th>Mã HS</th><th>Họ tên</th><th>Điểm sẽ lưu</th></tr>
+                {stringParsedScores && (
+                  <div className="mb-4 max-h-40 overflow-y-auto rounded border border-slate-200">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-100 text-slate-700">
+                        <tr><th className="px-3 py-1.5">STT</th><th className="px-3 py-1.5">Mã HS</th><th className="px-3 py-1.5">Họ tên</th><th className="px-3 py-1.5">Điểm sẽ lưu</th></tr>
                       </thead>
-                      <tbody>
+                      <tbody className="divide-y divide-slate-100">
                         {students.map((st, i) => (
                           <tr key={st.id}>
-                            <td>{st.orderNumber}</td>
-                            <td>{st.studentCode}</td>
-                            <td>{st.fullName}</td>
-                            <td style={{ fontWeight: 700 }}>{formatScore(parsedPreviewScores[i])}</td>
+                            <td className="px-3 py-1">{st.orderNumber}</td>
+                            <td className="px-3 py-1 font-bold">{st.studentCode}</td>
+                            <td className="px-3 py-1">{st.fullName}</td>
+                            <td className="px-3 py-1 font-bold text-blue-700">{formatScore(stringParsedScores[i])}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -2193,49 +2141,41 @@
                   </div>
                 )}
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                  <button className="btn btn-secondary" onClick={() => setStringInputModal(false)}>Hủy</button>
-                  <button 
-                    className="btn btn-success" 
-                    disabled={!parsedPreviewScores} 
-                    onClick={handleSaveScoreString}
-                  >
-                    Lưu toàn bộ điểm
-                  </button>
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => setStringInputModal(false)} className="rounded border border-slate-300 px-3 py-1.5 text-xs font-medium">Hủy</button>
+                  <button disabled={!stringParsedScores} onClick={handleSaveScoreString} className="rounded bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white disabled:opacity-50">Lưu điểm</button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Modal Nhập bảng */}
-          {tableInputModal && activeColForTableInput && (
-            <div className="modal-overlay">
-              <div className="modal-box">
-                <div className="modal-header">
-                  <h3>Nhập điểm bảng: {activeColForTableInput.name}</h3>
-                  <button className="modal-close" onClick={() => setTableInputModal(false)}>×</button>
+          {tableInputModal && activeColForTable && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
+                <div className="mb-3 flex items-center justify-between border-b pb-2">
+                  <h3 className="font-bold text-slate-900">Nhập điểm bảng: {activeColForTable.name}</h3>
+                  <button onClick={() => setTableInputModal(false)} className="text-slate-400 hover:text-slate-600">×</button>
                 </div>
-                <div style={{ maxHeight: 380, overflowY: 'auto', marginBottom: 16 }}>
-                  <table>
-                    <thead>
+                <div className="mb-4 max-h-72 overflow-y-auto rounded border border-slate-200">
+                  <table className="w-full text-left text-xs">
+                    <thead className="sticky top-0 bg-slate-100 text-slate-700">
                       <tr>
-                        <th>STT</th>
-                        <th>Mã HS</th>
-                        <th>Họ và tên</th>
-                        <th style={{ width: 140 }}>Điểm (0 - 10)</th>
+                        <th className="px-3 py-2">STT</th>
+                        <th className="px-3 py-2">Mã HS</th>
+                        <th className="px-3 py-2">Họ tên</th>
+                        <th className="w-24 px-3 py-2">Điểm (0-10)</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-slate-100">
                       {students.map(st => (
                         <tr key={st.id}>
-                          <td>{st.orderNumber}</td>
-                          <td style={{ fontWeight: 600 }}>{st.studentCode}</td>
-                          <td>{st.fullName}</td>
-                          <td>
-                            <input 
-                              type="text" 
-                              className="form-control"
-                              style={{ padding: '4px 8px' }}
+                          <td className="px-3 py-1.5 font-medium">{st.orderNumber}</td>
+                          <td className="px-3 py-1.5 font-bold">{st.studentCode}</td>
+                          <td className="px-3 py-1.5">{st.fullName}</td>
+                          <td className="px-3 py-1.5">
+                            <input
+                              type="text"
+                              className="w-16 rounded border border-slate-300 px-2 py-0.5 text-center font-bold"
                               value={tableDraftScores[st.id] || ''}
                               onChange={(e) => setTableDraftScores({ ...tableDraftScores, [st.id]: e.target.value })}
                             />
@@ -2245,100 +2185,95 @@
                     </tbody>
                   </table>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                  <button className="btn btn-secondary" onClick={() => setTableInputModal(false)}>Hủy</button>
-                  <button className="btn btn-success" onClick={handleSaveTableScores}>Lưu điểm</button>
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => setTableInputModal(false)} className="rounded border border-slate-300 px-3 py-1.5 text-xs font-medium">Hủy</button>
+                  <button onClick={handleSaveTableScores} className="rounded bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white">Lưu điểm</button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Modal Nhập điểm nhóm */}
-          {groupScoreModal && groupScoreTargetCol && groupScoreTargetGroup && (
-            <div className="modal-overlay">
-              <div className="modal-box" style={{ maxWidth: 500 }}>
-                <div className="modal-header">
-                  <h3>Nhập điểm nhóm: {groupScoreTargetGroup.name}</h3>
-                  <button className="modal-close" onClick={() => setGroupScoreModal(false)}>×</button>
+          {groupScoreModal && groupTargetCol && groupTargetGroup && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+                <div className="mb-3 flex items-center justify-between border-b pb-2">
+                  <h3 className="font-bold text-slate-900">Nhập điểm nhóm: {groupTargetGroup.name}</h3>
+                  <button onClick={() => setGroupScoreModal(false)} className="text-slate-400 hover:text-slate-600">×</button>
                 </div>
-                <div className="form-group">
-                  <label>Điểm nhóm (0 - 10):</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    placeholder="VD: 8,5" 
-                    value={groupScoreVal} 
-                    onChange={(e) => setGroupScoreVal(e.target.value)} 
+                <div className="mb-3">
+                  <label className="mb-1 block text-xs font-semibold text-slate-700">Điểm nhóm (0 - 10):</label>
+                  <input
+                    type="text"
+                    className="w-full rounded border border-slate-300 px-3 py-1.5 text-xs focus:outline-none"
+                    placeholder="VD: 8,5"
+                    value={groupScoreInput}
+                    onChange={(e) => setGroupScoreInput(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label>Trạng thái tham gia của từng học sinh:</label>
-                  <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 6, padding: 8 }}>
-                    {(groupScoreTargetGroup.memberStudentIds || []).map(stId => {
+                <div className="mb-4">
+                  <label className="mb-1 block text-xs font-semibold text-slate-700">Trạng thái tham gia của từng học sinh:</label>
+                  <div className="max-h-48 overflow-y-auto rounded border border-slate-200 p-2 space-y-2 text-xs">
+                    {(groupTargetGroup.memberStudentIds || []).map(stId => {
                       const st = students.find(s => s.id === stId);
                       if (!st) return null;
-                      const isChecked = groupMemberParticipations[stId] !== false;
+                      const hasPart = groupMemberStatus[stId] !== false;
                       return (
-                        <div key={stId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #f1f5f9' }}>
+                        <div key={stId} className="flex items-center justify-between border-b border-slate-100 pb-1">
                           <span>{st.orderNumber}. {st.fullName} ({st.studentCode})</span>
-                          <button 
-                            type="button" 
-                            className={`btn btn-sm ${isChecked ? 'btn-success' : 'btn-danger'}`}
-                            onClick={() => setGroupMemberParticipations({ ...groupMemberParticipations, [stId]: !isChecked })}
+                          <button
+                            type="button"
+                            onClick={() => setGroupMemberStatus({ ...groupMemberStatus, [stId]: !hasPart })}
+                            className={`rounded px-2 py-0.5 text-xs font-bold transition ${hasPart ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}
                           >
-                            {isChecked ? 'Có tham gia' : 'Không (0 điểm)'}
+                            {hasPart ? 'Có tham gia' : 'Không (0đ)'}
                           </button>
                         </div>
                       );
                     })}
                   </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                  <button className="btn btn-secondary" onClick={() => setGroupScoreModal(false)}>Hủy</button>
-                  <button className="btn btn-primary" onClick={handleSaveGroupScore}>Lưu điểm nhóm</button>
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => setGroupScoreModal(false)} className="rounded border border-slate-300 px-3 py-1.5 text-xs font-medium">Hủy</button>
+                  <button onClick={handleSaveGroupScore} className="rounded bg-blue-700 px-4 py-1.5 text-xs font-semibold text-white">Lưu điểm nhóm</button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Modal Điểm cải thiện */}
           {improvementModal && (
-            <div className="modal-overlay">
-              <div className="modal-box">
-                <div className="modal-header">
-                  <h3>Thiết lập điểm cải thiện</h3>
-                  <button className="modal-close" onClick={() => setImprovementModal(false)}>×</button>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
+                <div className="mb-3 flex items-center justify-between border-b pb-2">
+                  <h3 className="font-bold text-slate-900">Thiết lập điểm cải thiện</h3>
+                  <button onClick={() => setImprovementModal(false)} className="text-slate-400 hover:text-slate-600">×</button>
                 </div>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 12 }}>
-                  Điểm cải thiện sẽ thay thế điểm 0 hoặc cộng gộp theo trọng số vào cột thường xuyên quy đổi thấp nhất.
-                </p>
-                <div className="form-group" style={{ maxWidth: 200 }}>
-                  <label>Trọng số cải thiện (%):</label>
-                  <input 
-                    type="number" 
-                    min="1" 
-                    max="100" 
-                    className="form-control" 
-                    value={improvementWeight} 
-                    onChange={(e) => setImprovementWeight(parseInt(e.target.value) || 30)} 
+                <p className="mb-2 text-xs text-slate-500">Điểm cải thiện sẽ thay thế điểm 0 hoặc cộng gộp theo trọng số vào cột thường xuyên quy đổi thấp nhất.</p>
+                <div className="mb-3 max-w-xs">
+                  <label className="mb-1 block text-xs font-semibold text-slate-700">Trọng số cải thiện (%):</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    className="w-24 rounded border border-slate-300 px-2 py-1 text-xs"
+                    value={improvementWeight}
+                    onChange={(e) => setImprovementWeight(parseInt(e.target.value) || 30)}
                   />
                 </div>
-                <div style={{ maxHeight: 300, overflowY: 'auto', marginBottom: 16 }}>
-                  <table>
-                    <thead>
-                      <tr><th>STT</th><th>Mã HS</th><th>Họ tên</th><th>Điểm bài cải thiện</th></tr>
+                <div className="mb-4 max-h-56 overflow-y-auto rounded border border-slate-200">
+                  <table className="w-full text-left text-xs">
+                    <thead className="sticky top-0 bg-slate-100 text-slate-700">
+                      <tr><th className="px-3 py-1.5">STT</th><th className="px-3 py-1.5">Mã HS</th><th className="px-3 py-1.5">Họ tên</th><th className="w-24 px-3 py-1.5">Điểm cải thiện</th></tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-slate-100">
                       {students.map(st => (
                         <tr key={st.id}>
-                          <td>{st.orderNumber}</td>
-                          <td>{st.studentCode}</td>
-                          <td>{st.fullName}</td>
-                          <td>
-                            <input 
-                              type="text" 
-                              className="form-control"
-                              style={{ padding: '4px 8px', width: 100 }}
+                          <td className="px-3 py-1 font-medium">{st.orderNumber}</td>
+                          <td className="px-3 py-1 font-bold">{st.studentCode}</td>
+                          <td className="px-3 py-1">{st.fullName}</td>
+                          <td className="px-3 py-1">
+                            <input
+                              type="text"
+                              className="w-16 rounded border border-slate-300 px-2 py-0.5 text-center font-bold"
                               placeholder="0 - 10"
                               value={improvementDraftScores[st.id] || ''}
                               onChange={(e) => setImprovementDraftScores({ ...improvementDraftScores, [st.id]: e.target.value })}
@@ -2349,77 +2284,85 @@
                     </tbody>
                   </table>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                  <button className="btn btn-secondary" onClick={() => setImprovementModal(false)}>Đóng</button>
-                  <button className="btn btn-primary" onClick={() => {
-                    const newApplied = {};
-                    Object.keys(improvementDraftScores).forEach(sid => {
-                      const val = parseFloat(improvementDraftScores[sid].replace(',', '.'));
-                      if (!isNaN(val) && val >= 0 && val <= 10) {
-                        newApplied[sid] = { score: round1(val), weight: improvementWeight };
-                      }
-                    });
-                    setAppliedImprovements(newApplied);
-                    setImprovementModal(false);
-                  }}>Áp dụng</button>
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => setImprovementModal(false)} className="rounded border border-slate-300 px-3 py-1.5 text-xs font-medium">Hủy</button>
+                  <button
+                    onClick={() => {
+                      const updated = {};
+                      Object.keys(improvementDraftScores).forEach(sid => {
+                        const v = parseFloat(improvementDraftScores[sid].replace(',', '.'));
+                        if (!isNaN(v) && v >= 0 && v <= 10) {
+                          updated[sid] = { score: round1(v), weight: improvementWeight };
+                        }
+                      });
+                      setAppliedImprovements(updated);
+                      setImprovementModal(false);
+                    }}
+                    className="rounded bg-blue-700 px-4 py-1.5 text-xs font-semibold text-white"
+                  >
+                    Áp dụng
+                  </button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Modal Xem trước Excel */}
           {excelPreviewOpen && (
-            <div className="modal-overlay">
-              <div className="modal-box">
-                <div className="modal-header">
-                  <h3>XEM TRƯỚC BẢNG ĐIỂM XUẤT EXCEL ({semesterSetting.semester})</h3>
-                  <button className="modal-close" onClick={() => setExcelPreviewOpen(false)}>×</button>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+              <div className="w-full max-w-4xl rounded-xl bg-white p-6 shadow-xl">
+                <div className="mb-3 flex items-center justify-between border-b pb-2">
+                  <h3 className="font-bold text-slate-900">XEM TRƯỚC BẢNG ĐIỂM XUẤT EXCEL ({semesterSetting.semester})</h3>
+                  <button onClick={() => setExcelPreviewOpen(false)} className="text-slate-400 hover:text-slate-600">×</button>
                 </div>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 12 }}>
-                  Lưu ý: Các cột xếp loại chỉ hiển thị trên giao diện web và tra cứu, không đưa vào file Excel khi xuất.
-                </p>
-                <div style={{ maxHeight: 380, overflowY: 'auto', marginBottom: 16 }}>
-                  <table>
-                    <thead>
+                <p className="mb-3 text-xs text-slate-500">Các cột xếp loại chỉ hiển thị trên web và tra cứu, không đưa vào file Excel khi xuất.</p>
+                <div className="mb-4 max-h-72 overflow-y-auto rounded border border-slate-200">
+                  <table className="w-full text-left text-xs">
+                    <thead className="sticky top-0 bg-slate-100 text-slate-700">
                       <tr>
-                        <th>STT</th><th>Mã HS</th><th>Họ tên</th>
-                        <th>TX Báo trước (QĐ)</th><th>Điểm nhóm (QĐ)</th><th>TX Cá nhân (QĐ)</th>
-                        {semesterSetting.calculateSpecialTopic && <th>Chuyên đề (QĐ)</th>}
-                        <th>Giữa kỳ</th><th>Cuối kỳ</th><th>TBHK</th>
-                        {semesterSetting.semester === 'HK2' && <th>TBCN</th>}
+                        <th className="px-2 py-1.5">STT</th>
+                        <th className="px-2 py-1.5">Mã HS</th>
+                        <th className="px-2 py-1.5">Họ tên</th>
+                        <th className="px-2 py-1.5">TX Báo trước (QĐ)</th>
+                        <th className="px-2 py-1.5">Điểm nhóm (QĐ)</th>
+                        <th className="px-2 py-1.5">TX Cá nhân (QĐ)</th>
+                        {semesterSetting.calculateSpecialTopic && <th className="px-2 py-1.5">Chuyên đề (QĐ)</th>}
+                        <th className="px-2 py-1.5">Giữa kỳ</th>
+                        <th className="px-2 py-1.5">Cuối kỳ</th>
+                        <th className="px-2 py-1.5">TBHK</th>
+                        {semesterSetting.semester === 'HK2' && <th className="px-2 py-1.5">TBCN</th>}
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-slate-100">
                       {tableCalculations.map(st => (
                         <tr key={st.studentId}>
-                          <td>{st.orderNumber}</td><td>{st.studentCode}</td><td>{st.fullName}</td>
-                          <td>{formatScore(st.convertedMap.THUONG_XUYEN_BAO_TRUOC)}</td>
-                          <td>{formatScore(st.convertedMap.DIEM_NHOM)}</td>
-                          <td>{formatScore(st.convertedMap.THUONG_XUYEN_CA_NHAN)}</td>
-                          {semesterSetting.calculateSpecialTopic && <td>{formatScore(st.convertedMap.CHUYEN_DE)}</td>}
-                          <td>{formatScore(st.midterm)}</td><td>{formatScore(st.finalScore)}</td>
-                          <td style={{ fontWeight: 600 }}>{st.tbhk !== null ? formatScore(st.tbhk) : '-'}</td>
-                          {semesterSetting.semester === 'HK2' && (
-                            <td style={{ fontWeight: 600 }}>{st.tbcn !== null ? formatScore(st.tbcn) : '-'}</td>
-                          )}
+                          <td className="px-2 py-1">{st.orderNumber}</td>
+                          <td className="px-2 py-1 font-bold">{st.studentCode}</td>
+                          <td className="px-2 py-1">{st.fullName}</td>
+                          <td className="px-2 py-1">{formatScore(st.convertedMap.THUONG_XUYEN_BAO_TRUOC)}</td>
+                          <td className="px-2 py-1">{formatScore(st.convertedMap.DIEM_NHOM)}</td>
+                          <td className="px-2 py-1">{formatScore(st.convertedMap.THUONG_XUYEN_CA_NHAN)}</td>
+                          {semesterSetting.calculateSpecialTopic && <td className="px-2 py-1">{formatScore(st.convertedMap.CHUYEN_DE)}</td>}
+                          <td className="px-2 py-1">{formatScore(st.midterm)}</td>
+                          <td className="px-2 py-1">{formatScore(st.finalScore)}</td>
+                          <td className="px-2 py-1 font-bold">{st.tbhk !== null ? formatScore(st.tbhk) : '-'}</td>
+                          {semesterSetting.semester === 'HK2' && <td className="px-2 py-1 font-bold">{st.tbcn !== null ? formatScore(st.tbcn) : '-'}</td>}
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                  <button className="btn btn-secondary" onClick={() => setExcelPreviewOpen(false)}>Quay lại chỉnh sửa</button>
-                  <button className="btn btn-success" onClick={handleDownloadExcel}>Xác nhận xuất Excel</button>
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => setExcelPreviewOpen(false)} className="rounded border border-slate-300 px-3 py-1.5 text-xs font-medium">Quay lại</button>
+                  <button onClick={handleDownloadExcel} className="rounded bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700">Xác nhận xuất Excel</button>
                 </div>
               </div>
             </div>
           )}
-
         </div>
       );
     }
 
-    function PublicLookupView({ semesterSetting }) {
+    function PublicLookupComponent({ semesterSetting }) {
       const [lookupCode, setLookupCode] = useState('');
       const [searching, setSearching] = useState(false);
       const [studentData, setStudentData] = useState(null);
@@ -2440,10 +2383,9 @@
         setHistoryRows([]);
 
         try {
-          const db = firebase.firestore();
           const qCode = lookupCode.trim().toUpperCase();
-
           const stSnap = await db.collection('students').where('studentCode', '==', qCode).get();
+
           if (stSnap.empty) {
             setMsg('Không tìm thấy học sinh với mã: ' + qCode);
             setSearching(false);
@@ -2453,12 +2395,10 @@
           const st = stSnap.docs[0].data();
           setStudentData(st);
 
-          // 1. Lấy thông tin lớp
           if (st.classId) {
-            const cDoc = await db.collection('classes').doc(st.classId).get();
-            if (cDoc.exists) setClassName(cDoc.data().name || '');
+            const clsDoc = await db.collection('classes').doc(st.classId).get();
+            if (clsDoc.exists) setClassName(clsDoc.data().name || '');
 
-            // 2. Lấy nhóm hiện tại của học sinh
             const grpSnap = await db.collection('groups').where('classId', '==', st.classId).get();
             grpSnap.forEach(gd => {
               const gData = gd.data();
@@ -2468,34 +2408,28 @@
             });
           }
 
-          // 3. Lấy toàn bộ lịch sử điểm của học sinh
-          const hSnap = await db.collection('scoreHistory').where('studentCode', '==', qCode).get();
+          const histSnap = await db.collection('scoreHistory').where('studentCode', '==', qCode).get();
           const allHist = [];
-          hSnap.forEach(d => allHist.push(d.data()));
+          histSnap.forEach(d => allHist.push(d.data()));
           allHist.sort((a, b) => b.timestamp - a.timestamp);
 
-          // 4. QUY TẮC HIỂN THỊ LỊCH SỬ ĐIỂM:
-          // - Điểm cộng (DIEM_CONG), Điểm trừ (DIEM_TRU), Cải thiện: Hiển thị TOÀN BỘ
-          // - Cùng 1 cột điểm gốc thông thường: CHỈ HIỂN THỊ ĐIỂM Ở LẦN CUỐI CÙNG NHẬP VÀO
           const seenScoreColumns = new Set();
           const filteredRows = [];
 
           for (const row of allHist) {
-            const isSpecialEntry = row.scoreType === 'DIEM_CONG' || row.scoreType === 'DIEM_TRU' || row.reason?.includes('cải thiện');
-            if (isSpecialEntry) {
+            const isSpecial = row.scoreType === 'DIEM_CONG' || row.scoreType === 'DIEM_TRU' || row.reason?.includes('cải thiện');
+            if (isSpecial) {
               filteredRows.push(row);
             } else {
-              // Cột điểm gốc: dùng khóa học kỳ + tên cột điểm
-              const colKey = `${row.semester || ''}_${row.scoreColumnName || ''}`;
-              if (!seenScoreColumns.has(colKey)) {
-                seenScoreColumns.add(colKey);
+              const key = `${row.semester || ''}_${row.scoreColumnName || ''}`;
+              if (!seenScoreColumns.has(key)) {
+                seenScoreColumns.add(key);
                 filteredRows.push(row);
               }
             }
           }
 
           setHistoryRows(filteredRows);
-
         } catch (err) {
           setMsg('Lỗi tra cứu: ' + err.message);
         } finally {
@@ -2505,87 +2439,82 @@
 
       return (
         <div>
-          <form onSubmit={handleSearch} style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-            <input 
-              type="text" 
-              required 
-              className="form-control" 
-              placeholder="Nhập mã học sinh (VD: HS001)" 
-              value={lookupCode} 
-              onChange={(e) => setLookupCode(e.target.value)} 
-              style={{ maxWidth: 320 }}
+          <form onSubmit={handleSearch} className="mb-6 flex gap-2">
+            <input
+              type="text"
+              required
+              className="w-full max-w-sm rounded border border-slate-300 px-3 py-2 text-xs focus:border-blue-600 focus:outline-none"
+              placeholder="Nhập mã học sinh (VD: HS001)"
+              value={lookupCode}
+              onChange={(e) => setLookupCode(e.target.value)}
             />
-            <button type="submit" className="btn btn-primary" disabled={searching}>
+            <button type="submit" disabled={searching} className="rounded bg-blue-700 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-800 disabled:opacity-50">
               {searching ? 'Đang tra cứu...' : 'Tra cứu ngay'}
             </button>
           </form>
 
-          {msg && <div style={{ color: 'var(--danger)', fontSize: '0.9rem', marginBottom: 12 }}>{msg}</div>}
+          {msg && <div className="mb-4 rounded bg-rose-50 p-2.5 text-xs font-semibold text-rose-600 border border-rose-200">{msg}</div>}
 
           {studentData && (
-            <div>
-              {/* Phần thông tin học sinh: Họ tên, Mã HS, Lớp, Nhóm hiện tại */}
-              <div style={{ background: '#f1f5f9', padding: 16, borderRadius: 8, marginBottom: 20, border: '1px solid var(--border)' }}>
-                <div style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--primary)' }}>{studentData.fullName}</div>
-                <div style={{ fontSize: '0.9rem', color: '#334155', marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-                  <span>Mã HS: <strong>{studentData.studentCode}</strong></span>
-                  <span>STT: <strong>{studentData.orderNumber}</strong></span>
-                  <span>Lớp: <strong style={{ color: 'var(--primary)' }}>{className || 'Chưa cập nhật'}</strong></span>
-                  <span>Nhóm hiện tại: <strong style={{ color: 'var(--success)' }}>{currentGroupName}</strong></span>
+            <div className="space-y-4">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <div className="text-base font-bold text-blue-900">{studentData.fullName}</div>
+                <div className="mt-2 flex flex-wrap gap-4 text-xs text-slate-600">
+                  <span>Mã HS: <strong className="text-slate-800">{studentData.studentCode}</strong></span>
+                  <span>STT: <strong className="text-slate-800">{studentData.orderNumber}</strong></span>
+                  <span>Lớp: <strong className="text-blue-700">{className || 'Chưa cập nhật'}</strong></span>
+                  <span>Nhóm hiện tại: <strong className="text-emerald-700">{currentGroupName}</strong></span>
                 </div>
               </div>
 
-              <h4 style={{ fontSize: '0.95rem', marginBottom: 10, color: 'var(--primary)' }}>
-                BẢNG ĐIỂM GHI NHẬN MỚI NHẤT & LỊCH SỬ ĐIỂM CỘNG/TRỪ
-              </h4>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 10 }}>
-                (Mỗi cột điểm gốc hiển thị bản ghi mới nhất. Lịch sử điểm cộng và điểm trừ hiển thị toàn bộ chi tiết)
-              </p>
-              <div className="table-container">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Thời gian</th>
-                      <th>Học kỳ</th>
-                      <th>Loại ghi nhận</th>
-                      <th>Cột điểm / Tác vụ</th>
-                      <th>Điểm / Mức</th>
-                      <th>Lý do & Trạng thái</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {historyRows.length === 0 ? (
-                      <tr><td colSpan={6} className="text-center">Chưa có bản ghi điểm nào được lưu</td></tr>
-                    ) : (
-                      historyRows.map((r, i) => (
-                        <tr key={i}>
-                          <td>{new Date(r.timestamp).toLocaleDateString('vi-VN')}</td>
-                          <td>{r.semester || '-'}</td>
-                          <td>
-                            <span className={`badge ${
-                              r.scoreType === 'DIEM_CONG' ? 'badge-success' : 
-                              (r.scoreType === 'DIEM_TRU' ? 'badge-danger' : 'badge-primary')
-                            }`}>
-                              {r.scoreType}
-                            </span>
-                          </td>
-                          <td>{r.scoreColumnName || '-'}</td>
-                          <td style={{ fontWeight: 700, color: r.scoreType === 'DIEM_TRU' ? 'var(--danger)' : 'var(--primary)' }}>
-                            {r.scoreType === 'DIEM_CONG' ? `+${r.newScore}đ` : (r.scoreType === 'DIEM_TRU' ? `${r.newScore}đ` : formatScore(r.newScore))}
-                          </td>
-                          <td>
-                            {r.participationStatus === 'KHONG_THAM_GIA' ? (
-                              <span style={{ color: 'var(--danger)', fontWeight: 600 }}>Không tham gia nhóm (0 điểm)</span>
-                            ) : (
-                              r.reason || 'Lần nhập mới nhất'
-                            )}
-                            {r.groupSnapshot && ` [Nhóm: ${r.groupSnapshot.groupName}]`}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+              <div>
+                <div className="mb-2 text-xs font-bold text-slate-800">
+                  BẢNG ĐIỂM GHI NHẬN MỚI NHẤT & LỊCH SỬ ĐIỂM CỘNG/TRỪ
+                </div>
+                <p className="mb-2 text-xs text-slate-500">Mỗi cột điểm gốc hiển thị bản ghi mới nhất. Lịch sử điểm cộng và điểm trừ hiển thị toàn bộ chi tiết.</p>
+                <div className="overflow-x-auto rounded-lg border border-slate-200">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-100 text-slate-700">
+                      <tr>
+                        <th className="px-3 py-2">Thời gian</th>
+                        <th className="px-3 py-2">Học kỳ</th>
+                        <th className="px-3 py-2">Loại ghi nhận</th>
+                        <th className="px-3 py-2">Cột điểm / Tác vụ</th>
+                        <th className="px-3 py-2">Điểm / Mức</th>
+                        <th className="px-3 py-2">Lý do & Trạng thái</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {historyRows.length === 0 ? (
+                        <tr><td colSpan={6} className="px-3 py-4 text-center text-slate-400">Chưa có bản ghi điểm nào được lưu</td></tr>
+                      ) : (
+                        historyRows.map((r, i) => (
+                          <tr key={i} className="hover:bg-slate-50">
+                            <td className="px-3 py-2 font-medium text-slate-500">{new Date(r.timestamp).toLocaleDateString('vi-VN')}</td>
+                            <td className="px-3 py-2">{r.semester || '-'}</td>
+                            <td className="px-3 py-2">
+                              <span className={`inline-block rounded px-2 py-0.5 text-xs font-semibold ${r.scoreType === 'DIEM_CONG' ? 'bg-emerald-100 text-emerald-800' : (r.scoreType === 'DIEM_TRU' ? 'bg-rose-100 text-rose-800' : 'bg-blue-100 text-blue-800')}`}>
+                                {r.scoreType}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 font-bold text-slate-800">{r.scoreColumnName || '-'}</td>
+                            <td className={`px-3 py-2 font-black ${r.scoreType === 'DIEM_TRU' ? 'text-rose-600' : 'text-blue-700'}`}>
+                              {r.scoreType === 'DIEM_CONG' ? `+${r.newScore}đ` : (r.scoreType === 'DIEM_TRU' ? `${r.newScore}đ` : formatScore(r.newScore))}
+                            </td>
+                            <td className="px-3 py-2 text-slate-600">
+                              {r.participationStatus === 'KHONG_THAM_GIA' ? (
+                                <span className="font-bold text-rose-600">Không tham gia nhóm (0 điểm)</span>
+                              ) : (
+                                r.reason || 'Lần nhập mới nhất'
+                              )}
+                              {r.groupSnapshot && ` [Nhóm: ${r.groupSnapshot.groupName}]`}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
