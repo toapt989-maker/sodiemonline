@@ -25,7 +25,7 @@
 
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    /* Tùy chỉnh thanh cuộn thanh mảnh */
+    /* Thanh cuộn thanh mảnh */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #f1f5f9; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -36,9 +36,10 @@
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState, useEffect, useMemo, useRef } = React;
+    const { useState, useEffect, useMemo } = React;
 
-    //    const firebaseConfig = {
+    // Cấu hình Firebase sodiemonline
+    const firebaseConfig = {
       apiKey: "AIzaSyBKI6CPLt3M159K9GdD0GUVfDIAaYzemvg",
       authDomain: "sodiemonline.firebaseapp.com",
       projectId: "sodiemonline",
@@ -54,11 +55,12 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // HÀM TIỆN ÍCH LÀM TRÒN VÀ ĐỊNH DẠNG SỐ
+    // Hàm tiện ích làm tròn và định dạng
     const round1 = (val) => (val === null || val === undefined || isNaN(val) ? null : Math.round(val * 10) / 10);
     const round2 = (val) => (val === null || val === undefined || isNaN(val) ? null : Math.round(val * 100) / 100);
     const formatScore = (val) => (val === null || val === undefined || isNaN(val) ? '-' : val.toString().replace('.', ','));
 
+    // Đổi tên nhãn ngắn gọn theo yêu cầu
     const SCORE_TYPE_LABELS = {
       THUONG_XUYEN_BAO_TRUOC: 'TX1',
       DIEM_NHOM: 'TX2',
@@ -83,7 +85,7 @@
       return 'Chưa đạt';
     };
 
-    //    function App() {
+    function App() {
       const [currentUser, setCurrentUser] = useState(null);
       const [authLoading, setAuthLoading] = useState(true);
       const [activeTab, setActiveTab] = useState('DASHBOARD');
@@ -117,7 +119,7 @@
       const [suddenWeight, setSuddenWeight] = useState(20);
       const [draftSuddenWeight, setDraftSuddenWeight] = useState(20);
 
-      // Modal xác nhận (Universal Confirmation Modal)
+      // Modal xác nhận
       const [confirmModal, setConfirmModal] = useState({
         isOpen: false,
         title: '',
@@ -129,7 +131,7 @@
         setConfirmModal({ isOpen: true, title, message, onConfirm });
       };
 
-      // Modal quản lý lớp & học sinh
+      // Modal tạo lớp / nhập HS
       const [classModalOpen, setClassModalOpen] = useState(false);
       const [classNameInput, setClassNameInput] = useState('');
       const [classHasSpecialTopic, setClassHasSpecialTopic] = useState(false);
@@ -158,7 +160,7 @@
       const [tableScoreTargetCol, setTableScoreTargetCol] = useState(null);
       const [tableScoreDrafts, setTableScoreDrafts] = useState({});
 
-      // Modal nhập điểm nhóm
+      // Modal nhập điểm nhóm (TX2)
       const [groupScoreModalOpen, setGroupScoreModalOpen] = useState(false);
       const [selectedGroupId, setSelectedGroupId] = useState('');
       const [groupScoreTargetColId, setGroupScoreTargetColId] = useState('');
@@ -178,19 +180,19 @@
 
       // Modal điểm cộng / điểm trừ
       const [bonusModalOpen, setBonusModalOpen] = useState(false);
-      const [bonusActionType, setBonusActionType] = useState('DIEM_CONG'); // 'DIEM_CONG' | 'DIEM_TRU'
+      const [bonusActionType, setBonusActionType] = useState('DIEM_CONG');
       const [bonusReason, setBonusReason] = useState('');
-      const [bonusStudentValues, setBonusStudentValues] = useState({}); // { studentId: pointValue }
+      const [bonusStudentValues, setBonusStudentValues] = useState({});
 
       // Random học sinh
       const [randomClassId, setRandomClassId] = useState('');
       const [randomCount, setRandomCount] = useState(1);
       const [randomResults, setRandomResults] = useState([]);
 
-      // Xuất Excel Preview Modal
+      // Xuất Excel Preview
       const [excelPreviewOpen, setExcelPreviewOpen] = useState(false);
 
-      //      useEffect(() => {
+      useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((user) => {
           setCurrentUser(user);
           setAuthLoading(false);
@@ -247,7 +249,6 @@
       const loadClassData = async (classId) => {
         if (!classId) return;
         try {
-          // Lấy cấu hình tỉ trọng lớp
           const classDoc = await db.collection('classes').doc(classId).get();
           if (classDoc.exists) {
             const cdata = classDoc.data();
@@ -259,27 +260,27 @@
             setDraftSuddenWeight(sWeight);
           }
 
-          // Lấy học sinh
+          // Lấy danh sách học sinh
           const stSnap = await db.collection('students').where('classId', '==', classId).get();
           const stList = [];
           stSnap.forEach(d => stList.push({ id: d.id, ...d.data() }));
           stList.sort((a, b) => a.orderNumber - b.orderNumber);
           setStudents(stList);
 
-          // Lấy nhóm
+          // Lấy danh sách nhóm
           const grpSnap = await db.collection('groups').where('classId', '==', classId).get();
           const grpList = [];
           grpSnap.forEach(d => grpList.push({ id: d.id, ...d.data() }));
           setGroups(grpList);
 
-          // Lấy cột điểm
+          // Lấy danh sách cột điểm gốc
           const colSnap = await db.collection('scoreColumns').where('classId', '==', classId).get();
           const colList = [];
           colSnap.forEach(d => colList.push({ id: d.id, ...d.data() }));
           colList.sort((a, b) => a.createdAt - b.createdAt);
           setScoreColumns(colList);
 
-          // Lấy điểm số
+          // Lấy bảng điểm entries
           const entrySnap = await db.collection('scoreEntries').where('classId', '==', classId).get();
           const entryList = [];
           entrySnap.forEach(d => entryList.push({ id: d.id, ...d.data() }));
@@ -299,17 +300,16 @@
           setBonusDeductions(bdList);
 
         } catch (err) {
-          console.error("Lỗi nạp dữ liệu chi tiết lớp:", err);
+          console.error("Lỗi nạp dữ liệu lớp:", err);
         }
       };
 
-      // Xử lý đổi lớp
       const handleSelectClass = (clsId) => {
         setSelectedClassId(clsId);
         loadClassData(clsId);
       };
 
-      //      const updateSemesterConfig = async (newSem, newCalcSpecial) => {
+      const updateSemesterConfig = async (newSem, newCalcSpecial) => {
         if (!currentUser) return;
         try {
           const payload = { semester: newSem, calculateSpecialTopic: newCalcSpecial };
@@ -320,7 +320,7 @@
         }
       };
 
-      // XỬ LÝ ĐĂNG NHẬP / ĐĂNG XUẤT
+      // Đăng nhập / Đăng xuất
       const handleLoginSubmit = async (e) => {
         e.preventDefault();
         setLoginError('');
@@ -346,18 +346,16 @@
         setActiveTab('DASHBOARD');
       };
 
-      //      const tableCalculations = useMemo(() => {
+      const tableCalculations = useMemo(() => {
         const curClass = classes.find(c => c.id === selectedClassId);
         const hasSpecialTopic = curClass ? curClass.hasSpecialTopic : false;
         const curSem = semesterSetting.semester;
 
-        // Lọc cột theo học kỳ (Chuyên đề được nhập xuyên năm)
         const relevantCols = scoreColumns.filter(c => {
           if (c.type === 'CHUYEN_DE') return true;
           return c.semester === curSem;
         });
 
-        // Nhóm các cột theo loại điểm
         const colsByType = {
           THUONG_XUYEN_BAO_TRUOC: relevantCols.filter(c => c.type === 'THUONG_XUYEN_BAO_TRUOC'),
           DIEM_NHOM: relevantCols.filter(c => c.type === 'DIEM_NHOM'),
@@ -371,7 +369,7 @@
         return students.map(student => {
           const stEntries = scoreEntries.filter(e => e.studentId === student.id);
 
-          // 1. Tính điểm quy đổi cho TX1, TX2, CHUYEN_DE
+          // 1. Tính quy đổi TX1 (Báo trước), TX2 (Nhóm), Chuyên đề
           const calculateStandardConverted = (type) => {
             const typeCols = colsByType[type] || [];
             if (typeCols.length === 0) return null;
@@ -383,7 +381,6 @@
             typeCols.forEach(col => {
               const entry = stEntries.find(e => e.scoreColumnId === col.id);
               if (entry && entry.score !== null && !isNaN(entry.score)) {
-                // Tỉ trọng từ cấu hình hoặc chia đều
                 const w = columnWeights[col.id] !== undefined ? columnWeights[col.id] : (100 / typeCols.length);
                 weightedSum += entry.score * (w / 100);
                 totalWeight += w;
@@ -399,8 +396,7 @@
           const tx2 = calculateStandardConverted('DIEM_NHOM');
           const chuyenDe = hasSpecialTopic ? calculateStandardConverted('CHUYEN_DE') : null;
 
-          // 2. Tính quy đổi TX3 hai lần (CN1 kết hợp với TXDX)
-          // Lần 1: Tính CN1 từ các cột TX3 gốc
+          // 2. Tính quy đổi TX3 hai lần (CN1 + TXDX)
           const tx3Cols = colsByType['THUONG_XUYEN_CA_NHAN'] || [];
           let cn1 = null;
           if (tx3Cols.length > 0) {
@@ -421,7 +417,7 @@
             }
           }
 
-          // Tính trung bình các cột TXDX đã nhập (bỏ qua cột chưa nhập)
+          // Trung bình các cột TXDX đã nhập (bỏ qua ô trống)
           const txdxCols = colsByType['THUONG_XUYEN_DOT_XUAT'] || [];
           let txdxAvg = null;
           if (txdxCols.length > 0) {
@@ -437,7 +433,6 @@
             if (count > 0) txdxAvg = sum / count;
           }
 
-          // Lần 2: Kết hợp CN1 và TXDX theo tỉ trọng đột xuất
           let tx3 = null;
           if (cn1 !== null && txdxAvg !== null) {
             tx3 = round1((txdxAvg * (suddenWeight / 100)) + (cn1 * ((100 - suddenWeight) / 100)));
@@ -461,7 +456,7 @@
             if (e && e.score !== null && !isNaN(e.score)) finalScore = e.score;
           }
 
-          // 3. Phân bổ điểm cộng / điểm trừ tích lũy CHỈ vào các cột thường xuyên quy đổi
+          // 3. Phân bổ điểm cộng / trừ tích lũy CHỈ vào các cột thường xuyên quy đổi
           const stBonusList = bonusDeductions.filter(b => b.studentId === student.id && b.semester === curSem);
           const totalBonusPoints = stBonusList
             .filter(b => b.type === 'DIEM_CONG')
@@ -471,7 +466,6 @@
             .reduce((acc, curr) => acc + (curr.points || 0), 0);
           const netBonus = round1(totalBonusPoints - totalDeductionPoints);
 
-          // Bản đồ các cột TX quy đổi trước khi cộng/trừ
           const convertedMap = {
             THUONG_XUYEN_BAO_TRUOC: tx1,
             DIEM_NHOM: tx2,
@@ -481,7 +475,7 @@
             convertedMap['CHUYEN_DE'] = chuyenDe;
           }
 
-          // Áp dụng điểm cộng/trừ vào cột TX quy đổi có giá trị
+          // Áp dụng điểm cộng/trừ vào cột TX có giá trị
           if (netBonus > 0) {
             let remainingBonus = netBonus;
             while (remainingBonus > 0) {
@@ -495,7 +489,7 @@
                   }
                 }
               }
-              if (!candidateKey) break; // Toàn bộ cột TX đã đạt 10 -> Hủy phần dư
+              if (!candidateKey) break;
               const canAdd = Math.min(round1(10 - convertedMap[candidateKey]), remainingBonus);
               convertedMap[candidateKey] = round1(convertedMap[candidateKey] + canAdd);
               remainingBonus = round1(remainingBonus - canAdd);
@@ -520,8 +514,8 @@
             }
           }
 
-          // 4. Tính TBHK linh hoạt: CHỈ tính các cột ĐÃ CÓ ĐIỂM QUY ĐỔI THỰC TẾ
-          // TX quy đổi: hệ số 1. GK: hệ số 2. CK: hệ số 3.
+          // 4. Tính TBHK linh hoạt theo các cột thực tế ĐÃ CÓ ĐIỂM
+          // TX quy đổi: hệ số 1, GK: hệ số 2, CK: hệ số 3
           let weightedSumAll = 0;
           let totalFactor = 0;
 
@@ -550,7 +544,6 @@
           // 5. TBCN ở HK2: (TBHK1 + TBHK2 * 2) / 3
           let tbcn = null;
           if (curSem === 'HK2' && tbhk !== null) {
-            // Giả lập hoặc lấy TBHK1 từ snapshot/bản ghi điểm
             const hk1Entry = stEntries.find(e => e.semester === 'HK1' && e.scoreType === 'CUOI_KY');
             const tbhk1 = hk1Entry && hk1Entry.score !== null ? hk1Entry.score : tbhk;
             tbcn = round2((tbhk1 + tbhk * 2) / 3);
@@ -575,7 +568,7 @@
         });
       }, [students, scoreColumns, scoreEntries, columnWeights, suddenWeight, bonusDeductions, semesterSetting, classes, selectedClassId]);
 
-      //      const handleCreateClass = async (e) => {
+      const handleCreateClass = async (e) => {
         e.preventDefault();
         if (!classNameInput.trim() || !currentUser) return;
         try {
@@ -678,11 +671,11 @@
         }
       };
 
-      //      const handleCreateColumn = async (e) => {
+      const handleCreateColumn = async (e) => {
         e.preventDefault();
         if (!newColName.trim() || !selectedClassId || !currentUser) return;
         try {
-          const colRef = await db.collection('scoreColumns').add({
+          await db.collection('scoreColumns').add({
             classId: selectedClassId,
             teacherId: currentUser.uid,
             name: newColName.trim(),
@@ -698,6 +691,7 @@
         }
       };
 
+      // ĐỒNG BỘ XÓA CỘT ĐIỂM: Xóa cột, xóa sạch điểm số và xóa triệt để lịch sử điểm của cột đó
       const handleDeleteColumn = (col) => {
         triggerConfirm(
           'Xác nhận xóa cột điểm gốc',
@@ -707,6 +701,7 @@
               const batch = db.batch();
               batch.delete(db.collection('scoreColumns').doc(col.id));
 
+              // Tìm toàn bộ scoreEntries và scoreHistory liên quan theo scoreColumnId lẫn scoreColumnName
               const [entrySnap, histByIdSnap, histByNameSnap] = await Promise.all([
                 db.collection('scoreEntries').where('scoreColumnId', '==', col.id).get(),
                 db.collection('scoreHistory').where('scoreColumnId', '==', col.id).get(),
@@ -729,7 +724,6 @@
       const handleSaveWeights = async () => {
         if (!selectedClassId) return;
 
-        // Kiểm tra tổng tỉ trọng của từng loại điểm (trừ TXDX)
         const relevantCols = scoreColumns.filter(c => c.type !== 'THUONG_XUYEN_DOT_XUAT' && (c.type === 'CHUYEN_DE' || c.semester === semesterSetting.semester));
         const grouped = {};
         relevantCols.forEach(col => {
@@ -800,7 +794,7 @@
         }
       };
 
-      //      const handlePrepareStringScore = (col) => {
+      const handlePrepareStringScore = (col) => {
         setStringScoreTargetCol(col);
         setStringScoreInput('');
         setStringScorePreview(null);
@@ -902,10 +896,8 @@
           for (const st of students) {
             const raw = (tableScoreDrafts[st.id] || '').trim();
             const entryRef = db.collection('scoreEntries').doc(`${selectedClassId}_${st.id}_${tableScoreTargetCol.id}`);
-            if (raw === '') {
-              // Bỏ trống
-              continue;
-            }
+            if (raw === '') continue;
+
             const val = parseFloat(raw.replace(',', '.'));
             if (isNaN(val) || val < 0 || val > 10) {
               alert(`Điểm của học sinh ${st.fullName} không hợp lệ!`);
@@ -951,7 +943,7 @@
         }
       };
 
-      //      const handleCreateGroup = async (e) => {
+      const handleCreateGroup = async (e) => {
         e.preventDefault();
         if (!newGroupName.trim() || !selectedClassId || !currentUser) return;
         try {
@@ -998,7 +990,6 @@
           setGroupScoreTargetColId(groupCols[0].id);
         }
 
-        // Mặc định tham gia là Có (true)
         const parts = {};
         (firstGrp.memberStudentIds || []).forEach(sid => {
           parts[sid] = true;
@@ -1032,7 +1023,6 @@
           const batch = db.batch();
           const now = Date.now();
 
-          // Tạo bản snapshot bất biến của nhóm tại thời điểm nhập
           const groupSnapshot = {
             groupId: targetGroup.id,
             groupName: targetGroup.name,
@@ -1090,10 +1080,9 @@
         }
       };
 
-      //      const handleOpenBonusModal = (actionType) => {
+      const handleOpenBonusModal = (actionType) => {
         setBonusActionType(actionType);
         setBonusReason('');
-        // Mở ra danh sách trắng mới tinh, học sinh không được chọn = 0
         const initialMap = {};
         students.forEach(st => {
           initialMap[st.id] = 0;
@@ -1185,7 +1174,6 @@
 
         try {
           const now = Date.now();
-          // Ghi nhận vào lịch sử
           await db.collection('scoreHistory').add({
             classId: selectedClassId,
             teacherId: currentUser.uid,
@@ -1196,7 +1184,7 @@
             scoreColumnName: 'Điểm cải thiện',
             newScore: cleanScore,
             participationStatus: 'KHONG_AP_DUNG',
-            reason: `Điểm cải thiện: ${cleanScore}đ (Trọng số: ${weightVal}%)`,
+            reason: `Điểm cải thiện: ${cleanScore}đ (Trọng số cải thiện: ${weightVal}%, gốc: ${100 - weightVal}%)`,
             modifiedBy: currentUser.email,
             timestamp: now
           });
@@ -1210,7 +1198,7 @@
         }
       };
 
-      //      const handleExecuteRandom = async () => {
+      const handleExecuteRandom = async () => {
         if (!randomClassId) {
           alert('Vui lòng chọn lớp cần random học sinh!');
           return;
@@ -1240,7 +1228,7 @@
         }
       };
 
-      //      const handleDownloadExcel = () => {
+      const handleDownloadExcel = () => {
         const curClass = classes.find(c => c.id === selectedClassId);
         const headers = ['STT', 'Mã HS', 'Họ và tên', 'TX1 (QĐ)', 'TX2 (QĐ)', 'TX3 (QĐ)'];
         if (semesterSetting.calculateSpecialTopic) headers.push('Chuyên đề (QĐ)');
@@ -1277,7 +1265,7 @@
         setExcelPreviewOpen(false);
       };
 
-      //      if (authLoading) {
+      if (authLoading) {
         return (
           <div className="flex min-h-screen items-center justify-center bg-slate-900 text-white">
             <div className="text-center">
@@ -1328,7 +1316,7 @@
               </div>
             </div>
 
-            {/* Sub-bar cho GV đã đăng nhập: Cài đặt học kỳ */}
+            {/* Sub-bar cài đặt học kỳ */}
             {currentUser && (
               <div className="bg-blue-950 px-4 py-2 border-t border-blue-800/60 text-xs">
                 <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
@@ -1371,9 +1359,8 @@
             )}
           </header>
 
-          {/* */}
+          {/* Giao diện khách vs Giao diện Giáo viên */}
           {!currentUser ? (
-            // ================= GIAO DIỆN KHÁCH: CHỈ TRA CỨU ĐIỂM =================
             <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6">
               <div className="rounded-xl border border-blue-200 bg-white p-6 shadow-sm">
                 <div className="flex items-center gap-3 border-b border-slate-200 pb-4 mb-5">
@@ -1390,15 +1377,13 @@
               </div>
             </main>
           ) : (
-            // ================= GIAO DIỆN GIÁO VIÊN TOÀN QUYỀN =================
             <div className="flex-1 flex flex-col">
-              {/* Thanh Tabs điều hướng */}
               <div className="bg-white border-b border-slate-200 shadow-sm sticky top-[100px] z-30">
                 <div className="max-w-7xl mx-auto px-4 flex overflow-x-auto gap-1">
                   {[
                     { id: 'DASHBOARD', label: 'Bảng tổng hợp & Điểm số', icon: 'fa-chart-column' },
                     { id: 'BONUS_DEDUCTION', label: 'Điểm cộng / trừ', icon: 'fa-scale-balanced' },
-                    { id: 'GROUPS', label: 'Quản lý nhóm', icon: 'fa-people-group' },
+                    { id: 'GROUPS', label: 'Quản lý nhóm (TX2)', icon: 'fa-people-group' },
                     { id: 'RANDOM', label: 'Random học sinh', icon: 'fa-shuffle' },
                     { id: 'CLASSES', label: 'Lớp & Học sinh', icon: 'fa-school' },
                     { id: 'LOOKUP', label: 'Tra cứu kiểm thử', icon: 'fa-search' }
@@ -1419,7 +1404,7 @@
               </div>
 
               <main className="flex-1 max-w-7xl w-full mx-auto p-4 space-y-5">
-                {/* Thanh chọn lớp đang thao tác */}
+                {/* Chọn lớp */}
                 <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-bold text-slate-700">Lớp đang chọn:</span>
@@ -1455,10 +1440,9 @@
                   </div>
                 </div>
 
-                {/* */}
+                {/* Dashboard Tab */}
                 {activeTab === 'DASHBOARD' && (
                   <div className="space-y-5">
-                    {/* Thống kê nhanh */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm text-center">
                         <div className="text-[11px] font-bold uppercase text-slate-500">Sĩ số lớp</div>
@@ -1478,12 +1462,12 @@
                       </div>
                     </div>
 
-                    {/* Danh sách cột điểm gốc và cấu hình tỉ trọng trực tiếp */}
+                    {/* Danh sách cột điểm gốc và cấu hình tỉ trọng */}
                     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
                         <div>
                           <h3 className="text-sm font-bold text-blue-900">DANH SÁCH CỘT ĐIỂM GỐC VÀ CẤU HÌNH TỈ TRỌNG</h3>
-                          <p className="text-xs text-slate-500">Tỉ trọng các cột cùng loại tự động chia đều (tổng = 100%). Nhập lại và bấm Lưu tỉ trọng.</p>
+                          <p className="text-xs text-slate-500">Tỉ trọng các cột cùng loại tự động chia đều (tổng = 100%).</p>
                         </div>
                         <button
                           onClick={handleSaveWeights}
@@ -1493,7 +1477,6 @@
                         </button>
                       </div>
 
-                      {/* Tỉ trọng TXDX riêng biệt */}
                       <div className="rounded-lg bg-amber-50 p-3 border border-amber-200">
                         <div className="flex flex-wrap items-center gap-3 text-xs">
                           <span className="font-bold text-slate-800">Tỉ trọng TXDX vào điểm TX3 (%):</span>
@@ -1667,14 +1650,14 @@
                   </div>
                 )}
 
-                {/* */}
+                {/* Điểm cộng / trừ Tab */}
                 {activeTab === 'BONUS_DEDUCTION' && (
                   <div className="space-y-5">
                     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 mb-4">
                         <div>
                           <h3 className="text-sm font-bold text-blue-900">QUẢN LÝ ĐIỂM CỘNG, ĐIỂM TRỪ & ĐIỂM CẢI THIỆN</h3>
-                          <p className="text-xs text-slate-500">Mỗi lần ghi nhận được lưu thành danh sách mới. Điểm cộng/trừ chỉ tác động vào các cột thường xuyên quy đổi.</p>
+                          <p className="text-xs text-slate-500">Mỗi lần ghi nhận được lưu thành danh sách mới. Điểm cộng/trừ chỉ tác động vào các cột TX quy đổi.</p>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <button
@@ -1698,7 +1681,6 @@
                         </div>
                       </div>
 
-                      {/* Bảng tổng hợp điểm tích lũy */}
                       <div className="overflow-x-auto rounded-lg border border-slate-200 mb-6">
                         <table className="w-full text-left text-xs">
                           <thead className="bg-slate-100 text-slate-700">
@@ -1728,7 +1710,6 @@
                         </table>
                       </div>
 
-                      {/* Lịch sử điểm cộng/trừ */}
                       <h4 className="text-xs font-bold text-slate-700 mb-2">NHẬT KÝ GHI NHẬN ĐIỂM CỘNG / TRỪ HỌC KỲ ({semesterSetting.semester})</h4>
                       <div className="overflow-x-auto rounded-lg border border-slate-200">
                         <table className="w-full text-left text-xs">
@@ -1771,7 +1752,7 @@
                   </div>
                 )}
 
-                {/* */}
+                {/* Nhóm học tập Tab (TX2) */}
                 {activeTab === 'GROUPS' && (
                   <div className="space-y-5">
                     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -1835,7 +1816,7 @@
                   </div>
                 )}
 
-                {/* */}
+                {/* Random học sinh Tab */}
                 {activeTab === 'RANDOM' && (
                   <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                     <div className="border-b border-slate-100 pb-3">
@@ -1892,7 +1873,7 @@
                   </div>
                 )}
 
-                {/* */}
+                {/* Danh sách lớp & học sinh Tab */}
                 {activeTab === 'CLASSES' && (
                   <div className="space-y-5">
                     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -1953,7 +1934,7 @@
                   </div>
                 )}
 
-                {/* */}
+                {/* Tra cứu kiểm thử Tab */}
                 {activeTab === 'LOOKUP' && (
                   <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                     <h3 className="text-sm font-bold text-blue-900 mb-4">KIỂM THỬ GIAO DIỆN TRA CỨU ĐIỂM CỦA HỌC SINH</h3>
@@ -1964,8 +1945,7 @@
             </div>
           )}
 
-          {/* */}
-
+          {}
           {/* Universal Confirmation Modal */}
           {confirmModal.isOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
@@ -2089,7 +2069,7 @@
                 </div>
                 <form onSubmit={handleImportStudents} className="space-y-3">
                   <p className="text-xs text-slate-500 leading-relaxed">
-                    Mỗi học sinh trên 1 dòng theo đúng cú pháp: <strong>&lt;STT&gt;,&lt;Mã HS&gt;,&lt;Họ và tên&gt;</strong>
+                    Mỗi học sinh trên 1 dòng: <strong>&lt;STT&gt;,&lt;Mã HS&gt;,&lt;Họ và tên&gt;</strong>
                   </p>
                   <textarea
                     rows={6}
@@ -2301,7 +2281,7 @@
             </div>
           )}
 
-          {/* Modal Nhập Điểm Nhóm */}
+          {/* Modal Nhập Điểm Nhóm (TX2) */}
           {groupScoreModalOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
               <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-xl max-h-[90vh] overflow-y-auto">
@@ -2350,7 +2330,6 @@
                     />
                   </div>
 
-                  {/* Tick chọn trạng thái tham gia */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">Trạng thái tham gia của thành viên:</label>
                     <div className="max-h-40 overflow-y-auto space-y-1.5 rounded border border-slate-200 p-2 bg-slate-50">
@@ -2629,12 +2608,12 @@
       );
     }
 
-    //    function PublicLookupComponent({ semesterSetting }) {
+    function PublicLookupComponent({ semesterSetting }) {
       const [lookupCode, setLookupCode] = useState('');
       const [searching, setSearching] = useState(false);
       const [studentData, setStudentData] = useState(null);
       const [className, setClassName] = useState('');
-      const [currentGroupName, setCurrentGroupName] = useState('Chưa vào nhóm');
+      const [currentGroupName, setCurrentGroupName] = useState('Chưa phân nhóm');
       const [historyRows, setHistoryRows] = useState([]);
       const [msg, setMsg] = useState('');
 
@@ -2646,7 +2625,7 @@
         setMsg('');
         setStudentData(null);
         setClassName('');
-        setCurrentGroupName('Chưa vào nhóm');
+        setCurrentGroupName('Chưa phân nhóm');
         setHistoryRows([]);
 
         try {
@@ -2665,6 +2644,7 @@
 
           let activeColsMap = new Map();
 
+          // Lấy Tên lớp và Tên nhóm hiện tại chuẩn xác từ thẻ do giáo viên tạo
           if (st.classId) {
             const clsDoc = await db.collection('classes').doc(st.classId).get();
             if (clsDoc.exists) {
@@ -2672,7 +2652,7 @@
             }
 
             const grpSnap = await db.collection('groups').where('classId', '==', st.classId).get();
-            let matchedGroupName = 'Chưa vào nhóm';
+            let matchedGroupName = 'Chưa phân nhóm';
             grpSnap.forEach(gd => {
               const gData = gd.data();
               if (gData.memberStudentIds && (gData.memberStudentIds.includes(st.id) || gData.memberStudentIds.includes(st.studentCode))) {
@@ -2681,6 +2661,7 @@
             });
             setCurrentGroupName(matchedGroupName);
 
+            // Thu thập các cột điểm gốc ĐANG CÒN HIỆN DIỆN
             const activeColSnap = await db.collection('scoreColumns').where('classId', '==', st.classId).get();
             activeColSnap.forEach(cd => {
               const cdata = cd.data();
@@ -2699,6 +2680,7 @@
           for (const row of allHist) {
             const isSpecial = row.scoreType === 'DIEM_CONG' || row.scoreType === 'DIEM_TRU' || row.scoreType === 'DIEM_CAI_THIEN' || row.reason?.includes('cải thiện');
             if (isSpecial) {
+              // Điểm cộng, điểm trừ, điểm cải thiện hiển thị đầy đủ
               filteredRows.push(row);
             } else {
               // Bỏ qua các bản ghi thuộc về cột điểm gốc đã bị xóa
@@ -2707,6 +2689,7 @@
               }
               const colName = row.scoreColumnName || activeColsMap.get(row.scoreColumnId);
               const key = `${row.semester || ''}_${colName || ''}`;
+              // Chỉ hiển thị lần ghi nhận cuối cùng của mỗi cột điểm gốc
               if (!seenScoreColumns.has(key)) {
                 seenScoreColumns.add(key);
                 filteredRows.push({
