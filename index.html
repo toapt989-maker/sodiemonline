@@ -60,11 +60,23 @@
     const round2 = (val) => (val === null || val === undefined || isNaN(val) ? null : Math.round(val * 100) / 100);
     const formatScore = (val) => (val === null || val === undefined || isNaN(val) ? '-' : val.toString().replace('.', ','));
 
-    // Đổi tên nhãn ngắn gọn theo yêu cầu
+    const NORMALIZE_SCORE_TYPE = (type) => {
+      if (!type) return '';
+      if (type === 'TX1' || type === 'THUONG_XUYEN_BAO_TRUOC') return 'TX1';
+      if (type === 'TX2' || type === 'DIEM_NHOM') return 'TX2';
+      if (type === 'TX3' || type === 'THUONG_XUYEN_CA_NHAN') return 'TX3';
+      if (type === 'TXDX' || type === 'THUONG_XUYEN_DOT_XUAT') return 'TXDX';
+      return type;
+    };
+
     const SCORE_TYPE_LABELS = {
+      TX1: 'TX1',
       THUONG_XUYEN_BAO_TRUOC: 'TX1',
+      TX2: 'TX2',
       DIEM_NHOM: 'TX2',
+      TX3: 'TX3',
       THUONG_XUYEN_CA_NHAN: 'TX3',
+      TXDX: 'TXDX',
       THUONG_XUYEN_DOT_XUAT: 'TXDX',
       CHUYEN_DE: 'Chuyên đề',
       GIUA_KY: 'Giữa kỳ',
@@ -74,7 +86,7 @@
       DIEM_CAI_THIEN: 'Điểm cải thiện'
     };
 
-    const getScoreTypeLabel = (type) => SCORE_TYPE_LABELS[type] || type;
+    const getScoreTypeLabel = (type) => SCORE_TYPE_LABELS[type] || SCORE_TYPE_LABELS[NORMALIZE_SCORE_TYPE(type)] || type;
 
     const getAcademicRank = (score) => {
       if (score === null || score === undefined || isNaN(score)) return '-';
@@ -141,12 +153,12 @@
       // Modal tạo cột điểm mới
       const [createColModalOpen, setCreateColModalOpen] = useState(false);
       const [newColName, setNewColName] = useState('');
-      const [newColType, setNewColType] = useState('THUONG_XUYEN_BAO_TRUOC');
+      const [newColType, setNewColType] = useState('TX1');
 
       // Modal chuyển loại cột điểm
       const [moveColModalOpen, setMoveColModalOpen] = useState(false);
       const [colToMove, setColToMove] = useState(null);
-      const [targetColType, setTargetColType] = useState('THUONG_XUYEN_BAO_TRUOC');
+      const [targetColType, setTargetColType] = useState('TX1');
 
       // Modal nhập điểm chuỗi
       const [stringScoreModalOpen, setStringScoreModalOpen] = useState(false);
@@ -218,7 +230,7 @@
 
       const loadTeacherData = async (teacherId) => {
         try {
-          // 1. Tải cài đặt học kỳ của riêng giáo viên
+          // 1. Tải cài đặt học kỳ của giáo viên hoặc mặc định
           const semRef = db.collection('semesterSettings').doc(teacherId);
           const semSnap = await semRef.get();
           if (semSnap.exists) {
@@ -229,10 +241,15 @@
             setSemesterSetting(initialSem);
           }
 
-          // 2. Tải danh sách lớp của giáo viên
-          const classSnap = await db.collection('classes').where('teacherId', '==', teacherId).get();
+          // 2. Tải danh sách lớp: Tương thích cả lớp cũ không có teacherId/createdBy
+          const classSnap = await db.collection('classes').get();
           const clsList = [];
-          classSnap.forEach(d => clsList.push({ id: d.id, ...d.data() }));
+          classSnap.forEach(d => {
+            const data = d.data();
+            if (!data.teacherId || data.teacherId === teacherId || currentUser?.email === 'toapt989@gmail.com') {
+              clsList.push({ id: d.id, ...data });
+            }
+          });
           setClasses(clsList);
 
           if (clsList.length > 0) {
@@ -273,24 +290,45 @@
           grpSnap.forEach(d => grpList.push({ id: d.id, ...d.data() }));
           setGroups(grpList);
 
-          // Lấy danh sách cột điểm gốc
+          // Lấy danh sách cột điểm gốc (chuẩn hóa loại điểm)
           const colSnap = await db.collection('scoreColumns').where('classId', '==', classId).get();
           const colList = [];
-          colSnap.forEach(d => colList.push({ id: d.id, ...d.data() }));
-          colList.sort((a, b) => a.createdAt - b.createdAt);
+          colSnap.forEach(d => {
+            const data = d.data();
+            colList.push({
+              id: d.id,
+              ...data,
+              normalizedType: NORMALIZE_SCORE_TYPE(data.type)
+            });
+          });
+          colList.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
           setScoreColumns(colList);
 
           // Lấy bảng điểm entries
           const entrySnap = await db.collection('scoreEntries').where('classId', '==', classId).get();
           const entryList = [];
-          entrySnap.forEach(d => entryList.push({ id: d.id, ...d.data() }));
+          entrySnap.forEach(d => {
+            const data = d.data();
+            entryList.push({
+              id: d.id,
+              ...data,
+              normalizedType: NORMALIZE_SCORE_TYPE(data.scoreType)
+            });
+          });
           setScoreEntries(entryList);
 
           // Lấy lịch sử điểm
           const histSnap = await db.collection('scoreHistory').where('classId', '==', classId).get();
           const histList = [];
-          histSnap.forEach(d => histList.push({ id: d.id, ...d.data() }));
-          histList.sort((a, b) => b.timestamp - a.timestamp);
+          histSnap.forEach(d => {
+            const data = d.data();
+            histList.push({
+              id: d.id,
+              ...data,
+              normalizedType: NORMALIZE_SCORE_TYPE(data.scoreType)
+            });
+          });
+          histList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
           setScoreHistory(histList);
 
           // Lấy điểm cộng / trừ
@@ -352,26 +390,26 @@
         const curSem = semesterSetting.semester;
 
         const relevantCols = scoreColumns.filter(c => {
-          if (c.type === 'CHUYEN_DE') return true;
+          if (c.normalizedType === 'CHUYEN_DE') return true;
           return c.semester === curSem;
         });
 
         const colsByType = {
-          THUONG_XUYEN_BAO_TRUOC: relevantCols.filter(c => c.type === 'THUONG_XUYEN_BAO_TRUOC'),
-          DIEM_NHOM: relevantCols.filter(c => c.type === 'DIEM_NHOM'),
-          THUONG_XUYEN_CA_NHAN: relevantCols.filter(c => c.type === 'THUONG_XUYEN_CA_NHAN'),
-          THUONG_XUYEN_DOT_XUAT: relevantCols.filter(c => c.type === 'THUONG_XUYEN_DOT_XUAT'),
-          CHUYEN_DE: relevantCols.filter(c => c.type === 'CHUYEN_DE'),
-          GIUA_KY: relevantCols.filter(c => c.type === 'GIUA_KY'),
-          CUOI_KY: relevantCols.filter(c => c.type === 'CUOI_KY')
+          TX1: relevantCols.filter(c => c.normalizedType === 'TX1'),
+          TX2: relevantCols.filter(c => c.normalizedType === 'TX2'),
+          TX3: relevantCols.filter(c => c.normalizedType === 'TX3'),
+          TXDX: relevantCols.filter(c => c.normalizedType === 'TXDX'),
+          CHUYEN_DE: relevantCols.filter(c => c.normalizedType === 'CHUYEN_DE'),
+          GIUA_KY: relevantCols.filter(c => c.normalizedType === 'GIUA_KY'),
+          CUOI_KY: relevantCols.filter(c => c.normalizedType === 'CUOI_KY')
         };
 
         return students.map(student => {
           const stEntries = scoreEntries.filter(e => e.studentId === student.id);
 
-          // 1. Tính quy đổi TX1 (Báo trước), TX2 (Nhóm), Chuyên đề
-          const calculateStandardConverted = (type) => {
-            const typeCols = colsByType[type] || [];
+          // 1. Tính quy đổi TX1, TX2, Chuyên đề
+          const calculateStandardConverted = (typeKey) => {
+            const typeCols = colsByType[typeKey] || [];
             if (typeCols.length === 0) return null;
 
             let totalWeight = 0;
@@ -392,12 +430,12 @@
             return round1(weightedSum / (totalWeight / 100));
           };
 
-          const tx1 = calculateStandardConverted('THUONG_XUYEN_BAO_TRUOC');
-          const tx2 = calculateStandardConverted('DIEM_NHOM');
+          const tx1 = calculateStandardConverted('TX1');
+          const tx2 = calculateStandardConverted('TX2');
           const chuyenDe = hasSpecialTopic ? calculateStandardConverted('CHUYEN_DE') : null;
 
           // 2. Tính quy đổi TX3 hai lần (CN1 + TXDX)
-          const tx3Cols = colsByType['THUONG_XUYEN_CA_NHAN'] || [];
+          const tx3Cols = colsByType['TX3'] || [];
           let cn1 = null;
           if (tx3Cols.length > 0) {
             let totalW = 0;
@@ -418,7 +456,7 @@
           }
 
           // Trung bình các cột TXDX đã nhập (bỏ qua ô trống)
-          const txdxCols = colsByType['THUONG_XUYEN_DOT_XUAT'] || [];
+          const txdxCols = colsByType['TXDX'] || [];
           let txdxAvg = null;
           if (txdxCols.length > 0) {
             let sum = 0;
@@ -467,9 +505,9 @@
           const netBonus = round1(totalBonusPoints - totalDeductionPoints);
 
           const convertedMap = {
-            THUONG_XUYEN_BAO_TRUOC: tx1,
-            DIEM_NHOM: tx2,
-            THUONG_XUYEN_CA_NHAN: tx3
+            TX1: tx1,
+            TX2: tx2,
+            TX3: tx3
           };
           if (hasSpecialTopic && semesterSetting.calculateSpecialTopic) {
             convertedMap['CHUYEN_DE'] = chuyenDe;
@@ -515,7 +553,6 @@
           }
 
           // 4. Tính TBHK linh hoạt theo các cột thực tế ĐÃ CÓ ĐIỂM
-          // TX quy đổi: hệ số 1, GK: hệ số 2, CK: hệ số 3
           let weightedSumAll = 0;
           let totalFactor = 0;
 
@@ -541,10 +578,10 @@
             tbhk = round2(weightedSumAll / totalFactor);
           }
 
-          // 5. TBCN ở HK2: (TBHK1 + TBHK2 * 2) / 3
+          // 5. TBCN ở HK2
           let tbcn = null;
           if (curSem === 'HK2' && tbhk !== null) {
-            const hk1Entry = stEntries.find(e => e.semester === 'HK1' && e.scoreType === 'CUOI_KY');
+            const hk1Entry = stEntries.find(e => e.semester === 'HK1' && (e.scoreType === 'CUOI_KY' || e.normalizedType === 'CUOI_KY'));
             const tbhk1 = hk1Entry && hk1Entry.score !== null ? hk1Entry.score : tbhk;
             tbcn = round2((tbhk1 + tbhk * 2) / 3);
           }
@@ -691,7 +728,6 @@
         }
       };
 
-      // ĐỒNG BỘ XÓA CỘT ĐIỂM: Xóa cột, xóa sạch điểm số và xóa triệt để lịch sử điểm của cột đó
       const handleDeleteColumn = (col) => {
         triggerConfirm(
           'Xác nhận xóa cột điểm gốc',
@@ -701,7 +737,6 @@
               const batch = db.batch();
               batch.delete(db.collection('scoreColumns').doc(col.id));
 
-              // Tìm toàn bộ scoreEntries và scoreHistory liên quan theo scoreColumnId lẫn scoreColumnName
               const [entrySnap, histByIdSnap, histByNameSnap] = await Promise.all([
                 db.collection('scoreEntries').where('scoreColumnId', '==', col.id).get(),
                 db.collection('scoreHistory').where('scoreColumnId', '==', col.id).get(),
@@ -724,14 +759,15 @@
       const handleSaveWeights = async () => {
         if (!selectedClassId) return;
 
-        const relevantCols = scoreColumns.filter(c => c.type !== 'THUONG_XUYEN_DOT_XUAT' && (c.type === 'CHUYEN_DE' || c.semester === semesterSetting.semester));
+        const relevantCols = scoreColumns.filter(c => c.normalizedType !== 'TXDX' && (c.normalizedType === 'CHUYEN_DE' || c.semester === semesterSetting.semester));
         const grouped = {};
         relevantCols.forEach(col => {
-          if (!grouped[col.type]) grouped[col.type] = [];
-          grouped[col.type].push(col);
+          const typeKey = col.normalizedType;
+          if (!grouped[typeKey]) grouped[typeKey] = [];
+          grouped[typeKey].push(col);
         });
 
-        for (const [type, cols] of Object.entries(grouped)) {
+        for (const [typeKey, cols] of Object.entries(grouped)) {
           if (cols.length > 1) {
             let total = 0;
             cols.forEach(col => {
@@ -739,7 +775,7 @@
               total += w;
             });
             if (Math.abs(total - 100) > 0.01) {
-              alert(`Tổng tỉ trọng các cột thuộc loại "${getScoreTypeLabel(type)}" phải bằng đúng 100%. Hiện tại: ${total}%`);
+              alert(`Tổng tỉ trọng các cột thuộc loại "${getScoreTypeLabel(typeKey)}" phải bằng đúng 100%. Hiện tại: ${total}%`);
               return;
             }
           }
@@ -985,7 +1021,7 @@
         const firstGrp = groups[0];
         setSelectedGroupId(firstGrp.id);
 
-        const groupCols = scoreColumns.filter(c => c.type === 'DIEM_NHOM' && c.semester === semesterSetting.semester);
+        const groupCols = scoreColumns.filter(c => c.normalizedType === 'TX2' && c.semester === semesterSetting.semester);
         if (groupCols.length > 0) {
           setGroupScoreTargetColId(groupCols[0].id);
         }
@@ -1044,7 +1080,7 @@
               studentId: st.id,
               studentCode: st.studentCode,
               scoreColumnId: targetCol.id,
-              scoreType: 'DIEM_NHOM',
+              scoreType: targetCol.type,
               semester: targetCol.semester,
               score: finalScore,
               groupSnapshot: groupSnapshot,
@@ -1060,7 +1096,7 @@
               studentCode: st.studentCode,
               scoreColumnId: targetCol.id,
               scoreColumnName: targetCol.name,
-              scoreType: 'DIEM_NHOM',
+              scoreType: targetCol.type,
               semester: targetCol.semester,
               newScore: finalScore,
               participationStatus: participated ? 'CO_THAM_GIA' : 'KHONG_THAM_GIA',
@@ -1139,7 +1175,7 @@
               studentCode: item.student.studentCode,
               semester: semesterSetting.semester,
               scoreType: bonusActionType,
-              scoreColumnName: bonusActionType === 'DIEM_CONG' ? 'Cộng điểm' : 'Trừ điểm',
+              scoreColumnName: bonusActionType === 'DIEM_CONG' ? 'Điểm cộng' : 'Điểm trừ',
               newScore: bonusActionType === 'DIEM_CONG' ? item.points : -item.points,
               participationStatus: 'KHONG_AP_DUNG',
               reason: bonusReason.trim(),
@@ -1240,9 +1276,9 @@
             st.orderNumber || (idx + 1),
             st.studentCode,
             st.fullName,
-            formatScore(st.convertedMap.THUONG_XUYEN_BAO_TRUOC),
-            formatScore(st.convertedMap.DIEM_NHOM),
-            formatScore(st.convertedMap.THUONG_XUYEN_CA_NHAN)
+            formatScore(st.convertedMap.TX1),
+            formatScore(st.convertedMap.TX2),
+            formatScore(st.convertedMap.TX3)
           ];
           if (semesterSetting.calculateSpecialTopic) {
             r.push(formatScore(st.convertedMap.CHUYEN_DE));
@@ -1359,7 +1395,7 @@
             )}
           </header>
 
-          {/* Giao diện khách vs Giao diện Giáo viên */}
+          {}
           {!currentUser ? (
             <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6">
               <div className="rounded-xl border border-blue-200 bg-white p-6 shadow-sm">
@@ -1512,8 +1548,8 @@
                               </tr>
                             ) : (
                               scoreColumns.map(col => {
-                                const isTxdx = col.type === 'THUONG_XUYEN_DOT_XUAT';
-                                const sameTypeCols = scoreColumns.filter(c => c.type === col.type && (c.type === 'CHUYEN_DE' || c.semester === semesterSetting.semester));
+                                const isTxdx = col.normalizedType === 'TXDX';
+                                const sameTypeCols = scoreColumns.filter(c => c.normalizedType === col.normalizedType && (c.normalizedType === 'CHUYEN_DE' || c.semester === semesterSetting.semester));
                                 const defaultWeight = sameTypeCols.length > 0 ? round1(100 / sameTypeCols.length) : 100;
                                 const curW = draftWeights[col.id] !== undefined ? draftWeights[col.id] : defaultWeight;
 
@@ -1556,7 +1592,7 @@
                                       <button
                                         onClick={() => {
                                           setColToMove(col);
-                                          setTargetColType(col.type);
+                                          setTargetColType(NORMALIZE_SCORE_TYPE(col.type));
                                           setMoveColModalOpen(true);
                                         }}
                                         className="rounded bg-amber-600 hover:bg-amber-700 text-white px-2 py-1 text-[11px] font-semibold transition"
@@ -1612,9 +1648,9 @@
                                   <td className="px-3 py-2 font-medium">{st.orderNumber || idx + 1}</td>
                                   <td className="px-3 py-2 font-bold text-slate-700">{st.studentCode}</td>
                                   <td className="px-3 py-2 font-semibold text-slate-900">{st.fullName}</td>
-                                  <td className="px-3 py-2 font-semibold">{formatScore(st.convertedMap.THUONG_XUYEN_BAO_TRUOC)}</td>
-                                  <td className="px-3 py-2 font-semibold">{formatScore(st.convertedMap.DIEM_NHOM)}</td>
-                                  <td className="px-3 py-2 font-semibold">{formatScore(st.convertedMap.THUONG_XUYEN_CA_NHAN)}</td>
+                                  <td className="px-3 py-2 font-semibold">{formatScore(st.convertedMap.TX1)}</td>
+                                  <td className="px-3 py-2 font-semibold">{formatScore(st.convertedMap.TX2)}</td>
+                                  <td className="px-3 py-2 font-semibold">{formatScore(st.convertedMap.TX3)}</td>
                                   {semesterSetting.calculateSpecialTopic && (
                                     <td className="px-3 py-2 font-semibold">{formatScore(st.convertedMap.CHUYEN_DE)}</td>
                                   )}
@@ -1880,7 +1916,7 @@
                       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 mb-4">
                         <div>
                           <h3 className="text-sm font-bold text-blue-900">DANH SÁCH LỚP HỌC & HỌC SINH</h3>
-                          <p className="text-xs text-slate-500">Mỗi giáo viên chỉ quản lý các lớp học do chính mình tạo.</p>
+                          <p className="text-xs text-slate-500">Tương thích hoàn toàn các lớp tạo trước đó.</p>
                         </div>
                         <div className="flex gap-2">
                           <button
@@ -1945,7 +1981,6 @@
             </div>
           )}
 
-          {}
           {/* Universal Confirmation Modal */}
           {confirmModal.isOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
@@ -2115,10 +2150,10 @@
                       value={newColType}
                       onChange={(e) => setNewColType(e.target.value)}
                     >
-                      <option value="THUONG_XUYEN_BAO_TRUOC">TX1 (Thường xuyên báo trước)</option>
-                      <option value="DIEM_NHOM">TX2 (Điểm nhóm)</option>
-                      <option value="THUONG_XUYEN_CA_NHAN">TX3 (Thường xuyên cá nhân)</option>
-                      <option value="THUONG_XUYEN_DOT_XUAT">TXDX (Thường xuyên đột xuất)</option>
+                      <option value="TX1">TX1 (Thường xuyên báo trước)</option>
+                      <option value="TX2">TX2 (Điểm nhóm)</option>
+                      <option value="TX3">TX3 (Thường xuyên cá nhân)</option>
+                      <option value="TXDX">TXDX (Thường xuyên đột xuất)</option>
                       <option value="CHUYEN_DE">Chuyên đề</option>
                       <option value="GIUA_KY">Giữa kỳ</option>
                       <option value="CUOI_KY">Cuối kỳ</option>
@@ -2152,10 +2187,10 @@
                       value={targetColType}
                       onChange={(e) => setTargetColType(e.target.value)}
                     >
-                      <option value="THUONG_XUYEN_BAO_TRUOC">TX1 (Thường xuyên báo trước)</option>
-                      <option value="DIEM_NHOM">TX2 (Điểm nhóm)</option>
-                      <option value="THUONG_XUYEN_CA_NHAN">TX3 (Thường xuyên cá nhân)</option>
-                      <option value="THUONG_XUYEN_DOT_XUAT">TXDX (Thường xuyên đột xuất)</option>
+                      <option value="TX1">TX1 (Thường xuyên báo trước)</option>
+                      <option value="TX2">TX2 (Điểm nhóm)</option>
+                      <option value="TX3">TX3 (Thường xuyên cá nhân)</option>
+                      <option value="TXDX">TXDX (Thường xuyên đột xuất)</option>
                       <option value="CHUYEN_DE">Chuyên đề</option>
                       <option value="GIUA_KY">Giữa kỳ</option>
                       <option value="CUOI_KY">Cuối kỳ</option>
@@ -2313,7 +2348,7 @@
                       value={groupScoreTargetColId}
                       onChange={(e) => setGroupScoreTargetColId(e.target.value)}
                     >
-                      {scoreColumns.filter(c => c.type === 'DIEM_NHOM' && c.semester === semesterSetting.semester).map(c => (
+                      {scoreColumns.filter(c => c.normalizedType === 'TX2' && c.semester === semesterSetting.semester).map(c => (
                         <option key={c.id} value={c.id}>{c.name}</option>
                       ))}
                     </select>
@@ -2579,9 +2614,9 @@
                           <td className="px-2 py-1.5">{st.orderNumber || i + 1}</td>
                           <td className="px-2 py-1.5 font-bold">{st.studentCode}</td>
                           <td className="px-2 py-1.5">{st.fullName}</td>
-                          <td className="px-2 py-1.5">{formatScore(st.convertedMap.THUONG_XUYEN_BAO_TRUOC)}</td>
-                          <td className="px-2 py-1.5">{formatScore(st.convertedMap.DIEM_NHOM)}</td>
-                          <td className="px-2 py-1.5">{formatScore(st.convertedMap.THUONG_XUYEN_CA_NHAN)}</td>
+                          <td className="px-2 py-1.5">{formatScore(st.convertedMap.TX1)}</td>
+                          <td className="px-2 py-1.5">{formatScore(st.convertedMap.TX2)}</td>
+                          <td className="px-2 py-1.5">{formatScore(st.convertedMap.TX3)}</td>
                           {semesterSetting.calculateSpecialTopic && <td className="px-2 py-1.5">{formatScore(st.convertedMap.CHUYEN_DE)}</td>}
                           <td className="px-2 py-1.5">{formatScore(st.midterm)}</td>
                           <td className="px-2 py-1.5">{formatScore(st.finalScore)}</td>
@@ -2672,7 +2707,7 @@
           const histSnap = await db.collection('scoreHistory').where('studentCode', '==', qCode).get();
           const allHist = [];
           histSnap.forEach(d => allHist.push(d.data()));
-          allHist.sort((a, b) => b.timestamp - a.timestamp);
+          allHist.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
           const seenScoreColumns = new Set();
           const filteredRows = [];
