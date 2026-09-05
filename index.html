@@ -38,7 +38,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
     body { background-color: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 60px; }
 
-    header { background-color: var(--primary); color: white; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-md); }
+    header { background-color: var(--primary); color: white; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-md); flex-wrap: wrap; gap: 10px; }
     header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.02em; }
     .header-actions { display: flex; align-items: center; gap: 12px; }
 
@@ -50,7 +50,7 @@
     .sub-bar { background: #f1f5f9; padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
     .sub-bar-group { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; }
 
-    .container { max-width: 1280px; margin: 24px auto; padding: 0 16px; }
+    .container { max-width: 1320px; margin: 24px auto; padding: 0 16px; }
     .card { background-color: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
     .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 16px; color: var(--primary); border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
 
@@ -61,7 +61,7 @@
     .form-group { margin-bottom: 14px; }
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #334155; }
     .form-control { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; transition: border-color 0.2s; background: #ffffff; }
-    .form-control:focus { outline: none; border-color: var(--primary); ring: 2px rgba(30, 64, 175, 0.2); }
+    .form-control:focus { outline: none; border-color: var(--primary); }
     textarea.form-control { resize: vertical; min-height: 90px; }
 
     .btn { display: inline-flex; align-items: center; justify-content: center; padding: 8px 16px; font-size: 0.85rem; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; transition: 0.2s; gap: 6px; }
@@ -90,18 +90,19 @@
     .badge-success { background-color: #dcfce7; color: #166534; }
     .badge-danger { background-color: #fee2e2; color: #991b1b; }
     .badge-warning { background-color: #fef3c7; color: #92400e; }
+    .badge-rank { font-weight: 700; padding: 4px 8px; border-radius: 6px; }
 
     .modal-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; backdrop-filter: blur(2px); }
-    .modal-box { background-color: white; border-radius: 10px; max-width: 840px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+    .modal-box { background-color: white; border-radius: 10px; max-width: 860px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
     .modal-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted); }
 
     .random-box { background: var(--primary-light); border: 2px dashed #3b82f6; border-radius: 8px; padding: 16px; text-align: center; }
     .random-num { font-size: 1.8rem; font-weight: 800; color: var(--primary); }
     .random-name { font-size: 1.1rem; font-weight: 700; margin-top: 4px; }
-    .highlight-score { font-weight: 700; color: var(--primary); }
     .text-center { text-align: center; }
     .table-container { overflow-x: auto; border: 1px solid var(--border); border-radius: 6px; }
+    .stat-pill { background: #f1f5f9; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
   </style>
 </head>
 <body>
@@ -110,7 +111,6 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
 
-    // Config Firebase thật của dự án
     const firebaseConfig = {
       apiKey: "AIzaSyBKI6CPLt3M159K9GdD0GUVfDIAaYzemvg",
       authDomain: "sodiemonline.firebaseapp.com",
@@ -128,6 +128,26 @@
     const round1 = (val) => Math.round(val * 10) / 10;
     const round2 = (val) => Math.round(val * 100) / 100;
     const formatScore = (val) => (val === null || val === undefined || isNaN(val)) ? '-' : val.toString().replace('.', ',');
+
+    const getAcademicRank = (score) => {
+      if (score === null || score === undefined || isNaN(score)) return '-';
+      if (score >= 9.0) return 'Xuất sắc';
+      if (score >= 8.0) return 'Tốt';
+      if (score >= 6.5) return 'Khá';
+      if (score >= 5.0) return 'Đạt';
+      return 'Chưa đạt';
+    };
+
+    const getRankBadgeClass = (rank) => {
+      switch (rank) {
+        case 'Xuất sắc': return 'badge-success';
+        case 'Tốt': return 'badge-primary';
+        case 'Khá': return 'badge-warning';
+        case 'Đạt': return 'badge-secondary';
+        case 'Chưa đạt': return 'badge-danger';
+        default: return '';
+      }
+    };
 
     function App() {
       const [currentUser, setCurrentUser] = useState(null);
@@ -151,8 +171,8 @@
       const [scoreColumns, setScoreColumns] = useState([]);
       const [scoreEntries, setScoreEntries] = useState([]);
       const [scoreHistories, setScoreHistories] = useState([]);
-      const [conversionColumns, setConversionColumns] = useState([]);
-      const [conversionMappings, setConversionMappings] = useState([]);
+      const [bonusDeductionEntries, setBonusDeductionEntries] = useState([]);
+      const [classWeights, setClassWeights] = useState({}); // { [colId]: weightNumber, suddenWeight: number }
 
       // State quản lý lớp & học sinh
       const [newClassName, setNewClassName] = useState('');
@@ -187,26 +207,27 @@
       const [parsedPreviewScores, setParsedPreviewScores] = useState(null);
       const [stringInputError, setStringInputError] = useState('');
 
-      // State nhập bảng (Table Input)
+      // State nhập bảng
       const [tableInputModal, setTableInputModal] = useState(false);
       const [activeColForTableInput, setActiveColForTableInput] = useState(null);
       const [tableDraftScores, setTableDraftScores] = useState({});
 
-      // State quy đổi và tỉ trọng
-      const [newConvColName, setNewConvColName] = useState('');
-      const [newConvColType, setNewConvColType] = useState('THUONG_XUYEN_BAO_TRUOC');
-      const [convMappingModal, setConvMappingModal] = useState(false);
-      const [activeConvCol, setActiveConvCol] = useState(null);
-      const [mappingDraftWeights, setMappingDraftWeights] = useState({});
+      // State tỉ trọng dạng draft tại danh sách cột
+      const [draftWeights, setDraftWeights] = useState({});
+      const [draftSuddenWeight, setDraftSuddenWeight] = useState(20);
+      const [weightErrorMessage, setWeightErrorMessage] = useState('');
 
-      // State điểm cải thiện & điểm cộng
+      // State điểm cải thiện
       const [improvementModal, setImprovementModal] = useState(false);
       const [improvementWeight, setImprovementWeight] = useState(30);
       const [improvementDraftScores, setImprovementDraftScores] = useState({});
-      const [appliedImprovements, setAppliedImprovements] = useState({}); // { [studentId]: { score: number, weight: number } }
+      const [appliedImprovements, setAppliedImprovements] = useState({});
 
-      const [bonusModal, setBonusModal] = useState(false);
-      const [appliedBonuses, setAppliedBonuses] = useState({}); // { [studentId]: bonusNumber }
+      // State Điểm cộng / Điểm trừ mới
+      const [actionType, setActionType] = useState('CONG'); // 'CONG' hoặc 'TRU'
+      const [bonusDeductionModal, setBonusDeductionModal] = useState(false);
+      const [bonusDeductionReason, setBonusDeductionReason] = useState('');
+      const [bonusDeductionSelections, setBonusDeductionSelections] = useState({}); // { [studentId]: points }
 
       // State Random học sinh
       const [randomClassId, setRandomClassId] = useState('');
@@ -215,6 +236,26 @@
 
       // State Xuất Excel Preview
       const [excelPreviewOpen, setExcelPreviewOpen] = useState(false);
+
+      // State Hộp thoại xác nhận xóa (Custom confirm modal)
+      const [confirmModal, setConfirmModal] = useState({
+        open: false,
+        title: '',
+        message: '',
+        onConfirm: null
+      });
+
+      const requestConfirm = (title, message, onConfirm) => {
+        setConfirmModal({
+          open: true,
+          title,
+          message,
+          onConfirm: async () => {
+            setConfirmModal(prev => ({ ...prev, open: false }));
+            if (onConfirm) await onConfirm();
+          }
+        });
+      };
 
       useEffect(() => {
         const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
@@ -227,7 +268,6 @@
         return () => unsubscribe();
       }, []);
 
-      // Tải cấu hình chung và danh sách lớp
       const loadGlobalConfig = async () => {
         try {
           const db = firebase.firestore();
@@ -253,7 +293,6 @@
         loadGlobalConfig();
       }, [currentUser]);
 
-      // Tải dữ liệu riêng biệt của lớp khi giáo viên đã đăng nhập
       const loadClassData = async (classId) => {
         if (!classId || !currentUser) return;
         try {
@@ -291,17 +330,24 @@
           histList.sort((a, b) => b.timestamp - a.timestamp);
           setScoreHistories(histList);
 
-          // 6. Cột quy đổi
-          const convSnap = await db.collection('conversionColumns').where('classId', '==', classId).get();
-          const convList = [];
-          convSnap.forEach(d => convList.push({ id: d.id, ...d.data() }));
-          setConversionColumns(convList);
+          // 6. Điểm cộng & trừ tích lũy
+          const bdSnap = await db.collection('bonusDeductionEntries').where('classId', '==', classId).get();
+          const bdList = [];
+          bdSnap.forEach(d => bdList.push({ id: d.id, ...d.data() }));
+          setBonusDeductionEntries(bdList);
 
-          // 7. Mapping quy đổi
-          const mapSnap = await db.collection('conversionMappings').get();
-          const mapList = [];
-          mapSnap.forEach(d => mapList.push({ id: d.id, ...d.data() }));
-          setConversionMappings(mapList);
+          // 7. Tỉ trọng của lớp
+          const weightDoc = await db.collection('classWeights').doc(classId).get();
+          if (weightDoc.exists) {
+            const wData = weightDoc.data();
+            setClassWeights(wData);
+            setDraftWeights(wData.weights || {});
+            setDraftSuddenWeight(wData.suddenWeight !== undefined ? wData.suddenWeight : 20);
+          } else {
+            setClassWeights({});
+            setDraftWeights({});
+            setDraftSuddenWeight(20);
+          }
 
         } catch (err) {
           console.error("Lỗi khi tải dữ liệu lớp:", err);
@@ -324,13 +370,7 @@
           setLoginEmail('');
           setLoginPass('');
         } catch (err) {
-          if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-            setLoginError('Email hoặc mật khẩu không chính xác.');
-          } else if (err.code === 'auth/invalid-email') {
-            setLoginError('Định dạng email không hợp lệ.');
-          } else {
-            setLoginError('Đăng nhập thất bại: ' + err.message);
-          }
+          setLoginError('Đăng nhập không thành công, vui lòng kiểm tra email và mật khẩu');
         } finally {
           setLoginSubmitting(false);
         }
@@ -341,7 +381,6 @@
         setCurrentTab('DASHBOARD');
       };
 
-      // Thay đổi và lưu học kỳ / tính chuyên đề
       const handleSaveSemesterSetting = async (sem, calcSpecial) => {
         const payload = { semester: sem, calculateSpecialTopic: calcSpecial, updatedAt: Date.now() };
         try {
@@ -352,7 +391,6 @@
         }
       };
 
-      // Quản lý tạo lớp
       const handleCreateClass = async (e) => {
         e.preventDefault();
         if (!newClassName.trim()) return;
@@ -375,21 +413,25 @@
         }
       };
 
-      // Xóa lớp
-      const handleDeleteClass = async (classId) => {
-        try {
-          const db = firebase.firestore();
-          await db.collection('classes').doc(classId).delete();
-          await loadGlobalConfig();
-          if (selectedClassId === classId) {
-            setSelectedClassId(classes.find(c => c.id !== classId)?.id || '');
+      const handleDeleteClass = (classId) => {
+        requestConfirm(
+          'Xác nhận xóa lớp học',
+          'Bạn có chắc chắn muốn xóa lớp học này? Toàn bộ dữ liệu điểm và học sinh của lớp sẽ không thể hoàn tác.',
+          async () => {
+            try {
+              const db = firebase.firestore();
+              await db.collection('classes').doc(classId).delete();
+              await loadGlobalConfig();
+              if (selectedClassId === classId) {
+                setSelectedClassId(classes.find(c => c.id !== classId)?.id || '');
+              }
+            } catch (e) {
+              console.error("Lỗi xóa lớp:", e);
+            }
           }
-        } catch (e) {
-          console.error("Lỗi xóa lớp:", e);
-        }
+        );
       };
 
-      // Nhập danh sách học sinh theo format <STT>,<Mã HS>,<Họ và tên>
       const handleImportStudents = async (e) => {
         e.preventDefault();
         setImportError('');
@@ -402,7 +444,7 @@
         for (let i = 0; i < lines.length; i++) {
           const parts = lines[i].split(',').map(s => s.trim());
           if (parts.length !== 3) {
-            setImportError(`Dòng ${i + 1} sai định dạng: cần đúng <STT>,<Mã HS>,<Họ và tên>`);
+            setImportError(`Dòng ${i + 1} cần đúng định dạng: STT,Mã HS,Họ và tên`);
             return;
           }
           const orderNum = parseInt(parts[0], 10);
@@ -410,12 +452,12 @@
           const name = parts[2];
 
           if (isNaN(orderNum) || !code || !name) {
-            setImportError(`Dòng ${i + 1} có giá trị rỗng hoặc STT không phải là số.`);
+            setImportError(`Dòng ${i + 1} có giá trị chưa hợp lệ`);
             return;
           }
 
           if (seenCodes.has(code)) {
-            setImportError(`Trùng lặp Mã HS [${code}] tại dòng ${i + 1}`);
+            setImportError(`Trùng lặp Mã HS ${code} tại dòng ${i + 1}`);
             return;
           }
           seenCodes.add(code);
@@ -446,120 +488,6 @@
         }
       };
 
-      const handleCreateGroup = async (e) => {
-        e.preventDefault();
-        if (!newGroupName.trim() || !selectedClassId) return;
-        try {
-          const db = firebase.firestore();
-          const ref = db.collection('groups').doc();
-          await ref.set({
-            id: ref.id,
-            classId: selectedClassId,
-            name: newGroupName.trim(),
-            memberStudentIds: selectedGroupMembers,
-            createdAt: Date.now()
-          });
-          setNewGroupName('');
-          setSelectedGroupMembers([]);
-          loadClassData(selectedClassId);
-        } catch (err) {
-          console.error("Lỗi tạo nhóm:", err);
-        }
-      };
-
-      const handleDissolveGroup = async (groupId) => {
-        try {
-          const db = firebase.firestore();
-          await db.collection('groups').doc(groupId).delete();
-          loadClassData(selectedClassId);
-        } catch (e) {
-          console.error("Lỗi giải tán nhóm:", e);
-        }
-      };
-
-      // Mở modal nhập điểm nhóm
-      const openGroupScoreInput = (col, group) => {
-        setGroupScoreTargetCol(col);
-        setGroupScoreTargetGroup(group);
-        setGroupScoreVal('');
-        const initialParticipations = {};
-        (group.memberStudentIds || []).forEach(sid => {
-          initialParticipations[sid] = true; // Mặc định có tham gia
-        });
-        setGroupMemberParticipations(initialParticipations);
-        setGroupScoreModal(true);
-      };
-
-      const handleSaveGroupScore = async () => {
-        const score = parseFloat(groupScoreVal.replace(',', '.'));
-        if (isNaN(score) || score < 0 || score > 10) {
-          return;
-        }
-
-        try {
-          const db = firebase.firestore();
-          const batch = db.batch();
-          const now = Date.now();
-
-          const snapshot = {
-            groupId: groupScoreTargetGroup.id,
-            groupName: groupScoreTargetGroup.name,
-            membersSnapshot: groupScoreTargetGroup.memberStudentIds || []
-          };
-
-          (groupScoreTargetGroup.memberStudentIds || []).forEach(stId => {
-            const st = students.find(s => s.id === stId);
-            if (!st) return;
-
-            const hasParticipated = groupMemberParticipations[stId] !== false;
-            const finalStScore = hasParticipated ? round1(score) : 0;
-            const entryId = `${selectedClassId}_${stId}_${groupScoreTargetCol.id}`;
-            const entryRef = db.collection('scoreEntries').doc(entryId);
-
-            batch.set(entryRef, {
-              id: entryId,
-              classId: selectedClassId,
-              studentId: stId,
-              studentCode: st.studentCode,
-              scoreColumnId: groupScoreTargetCol.id,
-              scoreType: 'DIEM_NHOM',
-              semester: groupScoreTargetCol.semester,
-              score: finalStScore,
-              participationStatus: hasParticipated ? 'CO_THAM_GIA' : 'KHONG_THAM_GIA',
-              groupSnapshot: snapshot,
-              updatedAt: now,
-              createdBy: currentUser.email
-            });
-
-            // Lịch sử bất biến
-            const hRef = db.collection('scoreHistory').doc();
-            batch.set(hRef, {
-              id: hRef.id,
-              scoreEntryId: entryId,
-              classId: selectedClassId,
-              studentId: stId,
-              studentCode: st.studentCode,
-              semester: groupScoreTargetCol.semester,
-              scoreType: 'DIEM_NHOM',
-              scoreColumnName: groupScoreTargetCol.name,
-              newScore: finalStScore,
-              participationStatus: hasParticipated ? 'CO_THAM_GIA' : 'KHONG_THAM_GIA',
-              groupSnapshot: snapshot,
-              reason: hasParticipated ? 'Nhập điểm nhóm' : 'Không tham gia hoạt động nhóm (Ghi nhận 0 điểm)',
-              modifiedBy: currentUser.email,
-              timestamp: now
-            });
-          });
-
-          await batch.commit();
-          setGroupScoreModal(false);
-          loadClassData(selectedClassId);
-        } catch (e) {
-          console.error("Lỗi lưu điểm nhóm:", e);
-        }
-      };
-
-      // Tạo cột điểm mới
       const handleCreateColumn = async (e) => {
         e.preventDefault();
         if (!newColName.trim() || !selectedClassId) return;
@@ -581,25 +509,62 @@
         }
       };
 
-      // Chuyển loại cột điểm đã nhập sang loại khác (Bảo toàn 100% điểm và lịch sử)
+      const handleDeleteColumn = (col) => {
+        requestConfirm(
+          'Xác nhận xóa cột điểm gốc',
+          `Bạn có chắc chắn muốn xóa cột điểm "${col.name}"? Toàn bộ điểm học sinh đã nhập trong cột này sẽ bị xóa bỏ.`,
+          async () => {
+            try {
+              const db = firebase.firestore();
+              const batch = db.batch();
+
+              // Xóa tài liệu cột điểm
+              batch.delete(db.collection('scoreColumns').doc(col.id));
+
+              // Xóa các điểm nhập liên quan
+              const entriesSnap = await db.collection('scoreEntries')
+                .where('classId', '==', selectedClassId)
+                .where('scoreColumnId', '==', col.id)
+                .get();
+
+              entriesSnap.forEach(d => batch.delete(d.ref));
+
+              // Ghi vết xóa vào lịch sử
+              const hRef = db.collection('scoreHistory').doc();
+              batch.set(hRef, {
+                id: hRef.id,
+                classId: selectedClassId,
+                scoreColumnName: col.name,
+                reason: `Đã xóa cột điểm ${col.name} (${col.type})`,
+                timestamp: Date.now(),
+                modifiedBy: currentUser.email,
+                participationStatus: 'KHONG_AP_DUNG'
+              });
+
+              await batch.commit();
+              loadClassData(selectedClassId);
+            } catch (err) {
+              console.error("Lỗi xóa cột điểm:", err);
+            }
+          }
+        );
+      };
+
       const handleExecuteChangeColumnType = async () => {
         if (!colToMove || !targetScoreType) return;
         try {
           const db = firebase.firestore();
           const batch = db.batch();
 
-          // 1. Cập nhật type ở scoreColumns
           const colRef = db.collection('scoreColumns').doc(colToMove.id);
           batch.update(colRef, { type: targetScoreType });
 
-          // 2. Cập nhật type trong các bản ghi scoreEntries
           const relEntries = scoreEntries.filter(e => e.scoreColumnId === colToMove.id);
           relEntries.forEach(ent => {
             const entryRef = db.collection('scoreEntries').doc(ent.id);
             batch.update(entryRef, { scoreType: targetScoreType });
           });
 
-          // 3. Ghi vết lịch sử chuyển đổi cột
           const histRef = db.collection('scoreHistory').doc();
           batch.set(histRef, {
             id: histRef.id,
@@ -617,6 +582,49 @@
           loadClassData(selectedClassId);
         } catch (err) {
           console.error("Lỗi chuyển loại cột:", err);
+        }
+      };
+
+      // Lưu tỉ trọng của các cột điểm gốc trong lớp
+      const handleSaveWeights = async () => {
+        setWeightErrorMessage('');
+        const relevantTypes = ['THUONG_XUYEN_BAO_TRUOC', 'THUONG_XUYEN_CA_NHAN', 'DIEM_NHOM', 'CHUYEN_DE'];
+        const currentSemCols = scoreColumns.filter(c => c.semester === semesterSetting.semester || c.type === 'CHUYEN_DE');
+
+        for (const type of relevantTypes) {
+          const colsInType = currentSemCols.filter(c => c.type === type);
+          if (colsInType.length > 0) {
+            let sumW = 0;
+            colsInType.forEach(c => {
+              const val = parseFloat(draftWeights[c.id]);
+              sumW += isNaN(val) ? (100 / colsInType.length) : val;
+            });
+
+            if (Math.round(sumW) !== 100) {
+              setWeightErrorMessage(`Tổng tỉ trọng các cột thuộc loại "${type}" đang là ${round1(sumW)}%, bắt buộc phải bằng đúng 100%.`);
+              return;
+            }
+          }
+        }
+
+        try {
+          const db = firebase.firestore();
+          const sW = parseFloat(draftSuddenWeight);
+          const suddenVal = isNaN(sW) ? 20 : sW;
+
+          await db.collection('classWeights').doc(selectedClassId).set({
+            classId: selectedClassId,
+            weights: draftWeights,
+            suddenWeight: suddenVal,
+            updatedAt: Date.now(),
+            updatedBy: currentUser.email
+          });
+
+          setClassWeights({ weights: draftWeights, suddenWeight: suddenVal });
+          setWeightErrorMessage('');
+          loadClassData(selectedClassId);
+        } catch (e) {
+          setWeightErrorMessage('Lỗi khi lưu tỉ trọng: ' + e.message);
         }
       };
 
@@ -638,7 +646,7 @@
         for (let i = 0; i < tokens.length; i++) {
           const val = parseFloat(tokens[i]);
           if (isNaN(val) || val < 0 || val > 10) {
-            setStringInputError(`Điểm STT ${i + 1} (${tokens[i]}) không hợp lệ (phải từ 0 đến 10)`);
+            setStringInputError(`Điểm STT ${i + 1} (${tokens[i]}) không hợp lệ (cần từ 0 đến 10)`);
             return;
           }
           scores.push(round1(val));
@@ -698,7 +706,6 @@
         }
       };
 
-      // Nhập điểm theo bảng (Table Input)
       const openTableInput = (col) => {
         setActiveColForTableInput(col);
         const drafts = {};
@@ -766,7 +773,223 @@
         }
       };
 
-      // Random học sinh không trùng lặp
+      const handleCreateGroup = async (e) => {
+        e.preventDefault();
+        if (!newGroupName.trim() || !selectedClassId) return;
+        try {
+          const db = firebase.firestore();
+          const ref = db.collection('groups').doc();
+          await ref.set({
+            id: ref.id,
+            classId: selectedClassId,
+            name: newGroupName.trim(),
+            memberStudentIds: selectedGroupMembers,
+            createdAt: Date.now()
+          });
+          setNewGroupName('');
+          setSelectedGroupMembers([]);
+          loadClassData(selectedClassId);
+        } catch (err) {
+          console.error("Lỗi tạo nhóm:", err);
+        }
+      };
+
+      const handleDissolveGroup = (groupId) => {
+        requestConfirm(
+          'Xác nhận giải tán nhóm',
+          'Bạn có chắc chắn muốn giải tán nhóm này? Các điểm nhóm đã ghi nhận trước đó cho học sinh vẫn sẽ được bảo toàn nguyên vẹn.',
+          async () => {
+            try {
+              const db = firebase.firestore();
+              await db.collection('groups').doc(groupId).delete();
+              loadClassData(selectedClassId);
+            } catch (e) {
+              console.error("Lỗi giải tán nhóm:", e);
+            }
+          }
+        );
+      };
+
+      const openGroupScoreInput = (col, group) => {
+        setGroupScoreTargetCol(col);
+        setGroupScoreTargetGroup(group);
+        setGroupScoreVal('');
+        const initialParticipations = {};
+        (group.memberStudentIds || []).forEach(sid => {
+          initialParticipations[sid] = true;
+        });
+        setGroupMemberParticipations(initialParticipations);
+        setGroupScoreModal(true);
+      };
+
+      const handleSaveGroupScore = async () => {
+        const score = parseFloat(groupScoreVal.replace(',', '.'));
+        if (isNaN(score) || score < 0 || score > 10) return;
+
+        try {
+          const db = firebase.firestore();
+          const batch = db.batch();
+          const now = Date.now();
+
+          const snapshot = {
+            groupId: groupScoreTargetGroup.id,
+            groupName: groupScoreTargetGroup.name,
+            membersSnapshot: groupScoreTargetGroup.memberStudentIds || []
+          };
+
+          (groupScoreTargetGroup.memberStudentIds || []).forEach(stId => {
+            const st = students.find(s => s.id === stId);
+            if (!st) return;
+
+            const hasParticipated = groupMemberParticipations[stId] !== false;
+            const finalStScore = hasParticipated ? round1(score) : 0;
+            const entryId = `${selectedClassId}_${stId}_${groupScoreTargetCol.id}`;
+            const entryRef = db.collection('scoreEntries').doc(entryId);
+
+            batch.set(entryRef, {
+              id: entryId,
+              classId: selectedClassId,
+              studentId: stId,
+              studentCode: st.studentCode,
+              scoreColumnId: groupScoreTargetCol.id,
+              scoreType: 'DIEM_NHOM',
+              semester: groupScoreTargetCol.semester,
+              score: finalStScore,
+              participationStatus: hasParticipated ? 'CO_THAM_GIA' : 'KHONG_THAM_GIA',
+              groupSnapshot: snapshot,
+              updatedAt: now,
+              createdBy: currentUser.email
+            });
+
+            const hRef = db.collection('scoreHistory').doc();
+            batch.set(hRef, {
+              id: hRef.id,
+              scoreEntryId: entryId,
+              classId: selectedClassId,
+              studentId: stId,
+              studentCode: st.studentCode,
+              semester: groupScoreTargetCol.semester,
+              scoreType: 'DIEM_NHOM',
+              scoreColumnName: groupScoreTargetCol.name,
+              newScore: finalStScore,
+              participationStatus: hasParticipated ? 'CO_THAM_GIA' : 'KHONG_THAM_GIA',
+              groupSnapshot: snapshot,
+              reason: hasParticipated ? 'Nhập điểm nhóm' : 'Không tham gia hoạt động nhóm (Ghi nhận 0 điểm)',
+              modifiedBy: currentUser.email,
+              timestamp: now
+            });
+          });
+
+          await batch.commit();
+          setGroupScoreModal(false);
+          loadClassData(selectedClassId);
+        } catch (e) {
+          console.error("Lỗi lưu điểm nhóm:", e);
+        }
+      };
+
+      const openBonusDeductionModal = (type) => {
+        setActionType(type);
+        setBonusDeductionReason('');
+        setBonusDeductionSelections({});
+        setBonusDeductionModal(true);
+      };
+
+      const handleSaveBonusDeduction = async () => {
+        if (!bonusDeductionReason.trim()) return;
+
+        const entriesToSave = [];
+        Object.keys(bonusDeductionSelections).forEach(sid => {
+          const pts = bonusDeductionSelections[sid];
+          if (pts && pts !== 0) {
+            const st = students.find(s => s.id === sid);
+            if (st) {
+              entriesToSave.push({
+                studentId: st.id,
+                studentCode: st.studentCode,
+                fullName: st.fullName,
+                points: actionType === 'CONG' ? Math.abs(pts) : -Math.abs(pts)
+              });
+            }
+          }
+        });
+
+        if (entriesToSave.length === 0) {
+          setBonusDeductionModal(false);
+          return;
+        }
+
+        try {
+          const db = firebase.firestore();
+          const batch = db.batch();
+          const now = Date.now();
+
+          entriesToSave.forEach(item => {
+            const bdRef = db.collection('bonusDeductionEntries').doc();
+            batch.set(bdRef, {
+              id: bdRef.id,
+              classId: selectedClassId,
+              studentId: item.studentId,
+              studentCode: item.studentCode,
+              fullName: item.fullName,
+              semester: semesterSetting.semester,
+              type: actionType,
+              points: item.points,
+              reason: bonusDeductionReason.trim(),
+              createdAt: now,
+              createdBy: currentUser.email
+            });
+
+            const hRef = db.collection('scoreHistory').doc();
+            batch.set(hRef, {
+              id: hRef.id,
+              classId: selectedClassId,
+              studentId: item.studentId,
+              studentCode: item.studentCode,
+              semester: semesterSetting.semester,
+              scoreType: actionType === 'CONG' ? 'DIEM_CONG' : 'DIEM_TRU',
+              scoreColumnName: actionType === 'CONG' ? 'Điểm cộng tích lũy' : 'Điểm trừ tích lũy',
+              newScore: item.points,
+              participationStatus: 'KHONG_AP_DUNG',
+              reason: bonusDeductionReason.trim(),
+              modifiedBy: currentUser.email,
+              timestamp: now
+            });
+          });
+
+          await batch.commit();
+          setBonusDeductionModal(false);
+          loadClassData(selectedClassId);
+        } catch (err) {
+          console.error("Lỗi lưu điểm cộng/trừ:", err);
+        }
+      };
+
+      // Thống kê tổng điểm cộng và trừ tích lũy theo từng học sinh trong học kỳ hiện tại
+      const accumulatedBonusDeduction = useMemo(() => {
+        const stats = {};
+        students.forEach(st => {
+          stats[st.id] = { totalBonus: 0, totalDeduction: 0, netPoints: 0 };
+        });
+
+        const semEntries = bonusDeductionEntries.filter(e => e.semester === semesterSetting.semester);
+        semEntries.forEach(entry => {
+          if (stats[entry.studentId]) {
+            if (entry.type === 'CONG') {
+              stats[entry.studentId].totalBonus = round2(stats[entry.studentId].totalBonus + Math.abs(entry.points));
+            } else if (entry.type === 'TRU') {
+              stats[entry.studentId].totalDeduction = round2(stats[entry.studentId].totalDeduction + Math.abs(entry.points));
+            }
+          }
+        });
+
+        students.forEach(st => {
+          stats[st.id].netPoints = round2(stats[st.id].totalBonus - stats[st.id].totalDeduction);
+        });
+
+        return stats;
+      }, [students, bonusDeductionEntries, semesterSetting.semester]);
+
       const handleRunRandom = async () => {
         if (!randomClassId) return;
         try {
@@ -795,126 +1018,232 @@
       const tableCalculations = useMemo(() => {
         const curClass = classes.find(c => c.id === selectedClassId);
         const hasSpecial = curClass ? curClass.hasSpecialTopic : true;
+        const currentSemCols = scoreColumns.filter(c => c.semester === semesterSetting.semester || c.type === 'CHUYEN_DE');
 
         return students.map(student => {
           const studentScores = scoreEntries.filter(e => e.studentId === student.id);
 
-          // 1. Điểm quy đổi từng cột
-          const convMap = {};
-          conversionColumns.forEach(cc => {
-            const maps = conversionMappings.filter(m => m.conversionColumnId === cc.id);
-            if (maps.length === 0) {
-              // Mặc định tính trung bình nếu chưa cấu hình tỉ trọng cụ thể
-              const relCols = scoreColumns.filter(c => c.type === cc.scoreType);
-              let sum = 0;
-              let cnt = 0;
-              relCols.forEach(col => {
-                const ent = studentScores.find(e => e.scoreColumnId === col.id);
-                if (ent && ent.score !== null && !isNaN(ent.score)) {
-                  sum += ent.score;
-                  cnt++;
-                }
-              });
-              convMap[cc.id] = cnt > 0 ? round1(sum / cnt) : null;
-              return;
-            }
-
+          // 1. Quy đổi Thường xuyên báo trước
+          const btCols = currentSemCols.filter(c => c.type === 'THUONG_XUYEN_BAO_TRUOC');
+          let btScore = null;
+          if (btCols.length > 0) {
             let sum = 0;
             let totalW = 0;
-            maps.forEach(m => {
-              const ent = studentScores.find(e => e.scoreColumnId === m.scoreColumnId);
+            btCols.forEach(col => {
+              const ent = studentScores.find(e => e.scoreColumnId === col.id);
               if (ent && ent.score !== null && !isNaN(ent.score)) {
-                sum += ent.score * (m.weight / 100);
-                totalW += m.weight;
+                const w = parseFloat(classWeights.weights?.[col.id]) || (100 / btCols.length);
+                sum += ent.score * (w / 100);
+                totalW += w;
               }
             });
-            convMap[cc.id] = totalW > 0 ? round1(sum / (totalW / 100)) : null;
-          });
+            btScore = totalW > 0 ? round1(sum / (totalW / 100)) : null;
+          }
 
-          // 2. Điểm cải thiện
+          // 2. Quy đổi Điểm nhóm
+          const groupCols = currentSemCols.filter(c => c.type === 'DIEM_NHOM');
+          let groupScore = null;
+          if (groupCols.length > 0) {
+            let sum = 0;
+            let totalW = 0;
+            groupCols.forEach(col => {
+              const ent = studentScores.find(e => e.scoreColumnId === col.id);
+              if (ent && ent.score !== null && !isNaN(ent.score)) {
+                const w = parseFloat(classWeights.weights?.[col.id]) || (100 / groupCols.length);
+                sum += ent.score * (w / 100);
+                totalW += w;
+              }
+            });
+            groupScore = totalW > 0 ? round1(sum / (totalW / 100)) : null;
+          }
+
+          // 3. Quy đổi Thường xuyên cá nhân kết hợp Thường xuyên đột xuất
+          const cnCols = currentSemCols.filter(c => c.type === 'THUONG_XUYEN_CA_NHAN');
+          const dxCols = currentSemCols.filter(c => c.type === 'THUONG_XUYEN_DOT_XUAT');
+
+          let cnBaseScore = null;
+          if (cnCols.length > 0) {
+            let sum = 0;
+            let totalW = 0;
+            cnCols.forEach(col => {
+              const ent = studentScores.find(e => e.scoreColumnId === col.id);
+              if (ent && ent.score !== null && !isNaN(ent.score)) {
+                const w = parseFloat(classWeights.weights?.[col.id]) || (100 / cnCols.length);
+                sum += ent.score * (w / 100);
+                totalW += w;
+              }
+            });
+            cnBaseScore = totalW > 0 ? round1(sum / (totalW / 100)) : null;
+          }
+
+          // Điểm trung bình đột xuất
+          let dxAvg = null;
+          if (dxCols.length > 0) {
+            let sumDx = 0;
+            let countDx = 0;
+            dxCols.forEach(col => {
+              const ent = studentScores.find(e => e.scoreColumnId === col.id);
+              if (ent && ent.score !== null && !isNaN(ent.score)) {
+                sumDx += ent.score;
+                countDx++;
+              }
+            });
+            dxAvg = countDx > 0 ? round1(sumDx / countDx) : null;
+          }
+
+          // Kết hợp cá nhân và đột xuất theo tỉ trọng X%
+          const suddenWeightVal = classWeights.suddenWeight !== undefined ? classWeights.suddenWeight : 20;
+          let combinedCnScore = null;
+          if (cnBaseScore !== null && dxAvg !== null) {
+            combinedCnScore = round1(cnBaseScore * ((100 - suddenWeightVal) / 100) + dxAvg * (suddenWeightVal / 100));
+          } else if (cnBaseScore !== null) {
+            combinedCnScore = cnBaseScore;
+          } else if (dxAvg !== null) {
+            combinedCnScore = dxAvg;
+          }
+
+          // 4. Quy đổi Chuyên đề
+          const cdCols = currentSemCols.filter(c => c.type === 'CHUYEN_DE');
+          let cdScore = null;
+          if (cdCols.length > 0) {
+            let sum = 0;
+            let totalW = 0;
+            cdCols.forEach(col => {
+              const ent = studentScores.find(e => e.scoreColumnId === col.id);
+              if (ent && ent.score !== null && !isNaN(ent.score)) {
+                const w = parseFloat(classWeights.weights?.[col.id]) || (100 / cdCols.length);
+                sum += ent.score * (w / 100);
+                totalW += w;
+              }
+            });
+            cdScore = totalW > 0 ? round1(sum / (totalW / 100)) : null;
+          }
+
+          // Thu thập các cột quy đổi thành map
+          const convertedMap = {
+            THUONG_XUYEN_BAO_TRUOC: btScore,
+            DIEM_NHOM: groupScore,
+            THUONG_XUYEN_CA_NHAN: combinedCnScore,
+            CHUYEN_DE: cdScore
+          };
+
+          // 5. Áp dụng Điểm cải thiện
           const imp = appliedImprovements[student.id];
           if (imp && imp.score !== null && !isNaN(imp.score)) {
-            // Tìm cột thường xuyên có điểm quy đổi thấp nhất
-            let lowestColId = null;
+            let lowestKey = null;
             let lowestScore = 11;
-            Object.keys(convMap).forEach(cid => {
-              const s = convMap[cid];
+
+            ['THUONG_XUYEN_BAO_TRUOC', 'DIEM_NHOM', 'THUONG_XUYEN_CA_NHAN'].forEach(k => {
+              const s = convertedMap[k];
               if (s !== null) {
                 if (s === 0) {
-                  lowestColId = cid;
+                  lowestKey = k;
                   lowestScore = 0;
                 } else if (s < lowestScore) {
                   lowestScore = s;
-                  lowestColId = cid;
+                  lowestKey = k;
                 }
               }
             });
 
-            if (lowestColId) {
+            if (lowestKey) {
               if (lowestScore === 0) {
-                convMap[lowestColId] = round1(imp.score);
+                convertedMap[lowestKey] = round1(imp.score);
               } else {
                 const baseWeight = (100 - imp.weight) / 100;
                 const impW = imp.weight / 100;
-                convMap[lowestColId] = round1(convMap[lowestColId] * baseWeight + imp.score * impW);
+                convertedMap[lowestKey] = round1(convertedMap[lowestKey] * baseWeight + imp.score * impW);
               }
             }
           }
 
-          // 3. Phân bổ điểm cộng: CHỈ CỘNG VÀO CỘT THƯỜNG XUYÊN QUY ĐỔI
-          let bonusRemain = appliedBonuses[student.id] || 0;
-          while (bonusRemain > 0) {
-            let candidateId = null;
-            let minVal = 10;
-            Object.keys(convMap).forEach(cid => {
-              const val = convMap[cid];
-              if (val !== null && val < 10) {
-                if (candidateId === null || val < minVal) {
-                  minVal = val;
-                  candidateId = cid;
-                }
-              }
-            });
+          // 6. Áp dụng Điểm cộng & Điểm trừ tích lũy (CHỈ VÀO THƯỜNG XUYÊN QUY ĐỔI)
+          const netBonus = accumulatedBonusDeduction[student.id]?.netPoints || 0;
 
-            if (!candidateId) break; // Toàn bộ các cột đã 10.0 -> bỏ phần dư
-            const curVal = convMap[candidateId];
-            const canAdd = Math.min(round1(10 - curVal), bonusRemain);
-            convMap[candidateId] = round1(curVal + canAdd);
-            bonusRemain = round1(bonusRemain - canAdd);
+          if (netBonus > 0) {
+            let bonusRemain = netBonus;
+            while (bonusRemain > 0) {
+              let candidateKey = null;
+              let minVal = 10;
+
+              ['THUONG_XUYEN_BAO_TRUOC', 'DIEM_NHOM', 'THUONG_XUYEN_CA_NHAN'].forEach(k => {
+                const val = convertedMap[k];
+                if (val !== null && val < 10) {
+                  if (candidateKey === null || val < minVal) {
+                    minVal = val;
+                    candidateKey = k;
+                  }
+                }
+              });
+
+              if (!candidateKey) break;
+              const curVal = convertedMap[candidateKey];
+              const canAdd = Math.min(round1(10 - curVal), bonusRemain);
+              convertedMap[candidateKey] = round1(curVal + canAdd);
+              bonusRemain = round1(bonusRemain - canAdd);
+            }
+          } else if (netBonus < 0) {
+            let deductRemain = Math.abs(netBonus);
+            while (deductRemain > 0) {
+              let candidateKey = null;
+              let maxVal = -1;
+
+              ['THUONG_XUYEN_BAO_TRUOC', 'DIEM_NHOM', 'THUONG_XUYEN_CA_NHAN'].forEach(k => {
+                const val = convertedMap[k];
+                if (val !== null && val > 0) {
+                  if (candidateKey === null || val > maxVal) {
+                    maxVal = val;
+                    candidateKey = k;
+                  }
+                }
+              });
+
+              if (!candidateKey) break;
+              const curVal = convertedMap[candidateKey];
+              const canDeduct = Math.min(curVal, deductRemain);
+              convertedMap[candidateKey] = round1(curVal - canDeduct);
+              deductRemain = round1(deductRemain - canDeduct);
+            }
           }
 
-          // 4. Giữa kỳ & Cuối kỳ (Tuyệt đối không cộng điểm thưởng vào đây)
+          // 7. Điểm Giữa kỳ và Cuối kỳ (Tuyệt đối không cộng trừ vào đây)
           const midE = studentScores.find(e => e.scoreType === 'GIUA_KY' && e.semester === semesterSetting.semester);
           const finE = studentScores.find(e => e.scoreType === 'CUOI_KY' && e.semester === semesterSetting.semester);
           const midterm = (midE && midE.score !== null) ? midE.score : null;
           const finalScore = (finE && finE.score !== null) ? finE.score : null;
 
-          // 5. Cột thường xuyên tham gia tính trung bình
+          // 8. Cột thường xuyên hợp lệ tham gia tính trung bình
           const validRegular = [];
-          conversionColumns.forEach(cc => {
-            if (cc.scoreType === 'CHUYEN_DE') {
-              if (hasSpecial && semesterSetting.calculateSpecialTopic && convMap[cc.id] !== null) {
-                validRegular.push(convMap[cc.id]);
-              }
-            } else if (convMap[cc.id] !== null) {
-              validRegular.push(convMap[cc.id]);
-            }
+          ['THUONG_XUYEN_BAO_TRUOC', 'DIEM_NHOM', 'THUONG_XUYEN_CA_NHAN'].forEach(k => {
+            if (convertedMap[k] !== null) validRegular.push(convertedMap[k]);
           });
 
-          // TBHK: (Tổng TX + GK*2 + CK*3) / (Số TX + 5)
+          if (hasSpecial && semesterSetting.calculateSpecialTopic && convertedMap['CHUYEN_DE'] !== null) {
+            validRegular.push(convertedMap['CHUYEN_DE']);
+          }
+
+          // Kiểm tra xem học sinh đã có bất kỳ cột điểm nào chưa
+          const hasAnyScore = validRegular.length > 0 || midterm !== null || finalScore !== null;
+
+          // Tính TBHK
           let tbhk = null;
           if (midterm !== null && finalScore !== null && validRegular.length > 0) {
             const sumReg = validRegular.reduce((a, b) => a + b, 0);
             tbhk = round2((sumReg + midterm * 2 + finalScore * 3) / (validRegular.length + 5));
           }
 
-          // TBCN: (TBHK1 + TBHK2 * 2) / 3 (Chỉ hiển thị tại HK2)
+          // Xếp loại học kỳ
+          const rankHk = getAcademicRank(tbhk);
+
+          // Tính TBCN và xếp loại cả năm
           let tbcn = null;
+          let rankCn = '-';
           if (semesterSetting.semester === 'HK2') {
             const hk1Fin = studentScores.find(e => e.semester === 'HK1' && e.scoreType === 'CUOI_KY');
             const fakeHk1 = (hk1Fin && hk1Fin.score !== null) ? hk1Fin.score : tbhk;
             if (fakeHk1 !== null && tbhk !== null) {
               tbcn = round2((fakeHk1 + tbhk * 2) / 3);
+              rankCn = getAcademicRank(tbcn);
             }
           }
 
@@ -923,28 +1252,45 @@
             orderNumber: student.orderNumber,
             studentCode: student.studentCode,
             fullName: student.fullName,
-            convMap,
+            convertedMap,
             midterm,
             finalScore,
+            hasAnyScore,
             tbhk,
-            tbcn
+            rankHk,
+            tbcn,
+            rankCn
           };
         });
-      }, [students, scoreEntries, scoreColumns, conversionColumns, conversionMappings, appliedImprovements, appliedBonuses, semesterSetting, classes, selectedClassId]);
+      }, [students, scoreEntries, scoreColumns, classWeights, appliedImprovements, accumulatedBonusDeduction, semesterSetting, classes, selectedClassId]);
 
-      // Xuất file Excel SheetJS
       const handleDownloadExcel = () => {
         const curClass = classes.find(c => c.id === selectedClassId);
-        const headers = ['STT', 'Mã HS', 'Họ và tên'];
-        conversionColumns.forEach(c => headers.push(c.name));
+        const headers = ['STT', 'Mã HS', 'Họ và tên', 'TX Báo trước (QĐ)', 'Điểm nhóm (QĐ)', 'TX Cá nhân (QĐ)'];
+        if (semesterSetting.calculateSpecialTopic) headers.push('Chuyên đề (QĐ)');
         headers.push('Giữa kỳ (x2)', 'Cuối kỳ (x3)', 'TBHK');
         if (semesterSetting.semester === 'HK2') headers.push('TBCN');
 
         const rows = tableCalculations.map((st, idx) => {
-          const r = [st.orderNumber || (idx + 1), st.studentCode, st.fullName];
-          conversionColumns.forEach(c => r.push(formatScore(st.convMap[c.id])));
-          r.push(formatScore(st.midterm), formatScore(st.finalScore), formatScore(st.tbhk));
-          if (semesterSetting.semester === 'HK2') r.push(formatScore(st.tbcn));
+          const r = [
+            st.orderNumber || (idx + 1),
+            st.studentCode,
+            st.fullName,
+            formatScore(st.convertedMap.THUONG_XUYEN_BAO_TRUOC),
+            formatScore(st.convertedMap.DIEM_NHOM),
+            formatScore(st.convertedMap.THUONG_XUYEN_CA_NHAN)
+          ];
+          if (semesterSetting.calculateSpecialTopic) {
+            r.push(formatScore(st.convertedMap.CHUYEN_DE));
+          }
+          r.push(
+            formatScore(st.midterm),
+            formatScore(st.finalScore),
+            st.tbhk !== null ? formatScore(st.tbhk) : 'Chưa đủ điểm'
+          );
+          if (semesterSetting.semester === 'HK2') {
+            r.push(st.tbcn !== null ? formatScore(st.tbcn) : 'Chưa đủ HK');
+          }
           return r;
         });
 
@@ -957,7 +1303,6 @@
 
       return (
         <div>
-          {/* Header */}
           <header>
             <h1>SỔ ĐIỂM ĐIỆN TỬ & QUẢN LÝ LỚP HỌC</h1>
             <div className="header-actions">
@@ -972,7 +1317,6 @@
             </div>
           </header>
 
-          {/* Sub-bar cài đặt Học kỳ (Chỉ hiển thị cho giáo viên đã đăng nhập) */}
           {currentUser && (
             <div>
               <div className="sub-bar">
@@ -1012,7 +1356,7 @@
                   <span>Lớp đang chọn:</span>
                   <select 
                     className="form-control" 
-                    style={{ width: 160, padding: '4px 8px' }} 
+                    style={{ width: 170, padding: '4px 8px' }} 
                     value={selectedClassId} 
                     onChange={(e) => setSelectedClassId(e.target.value)}
                   >
@@ -1021,7 +1365,6 @@
                 </div>
               </div>
 
-              {/* Thanh điều hướng chính của Giáo viên */}
               <div className="nav-bar">
                 <button className={currentTab === 'DASHBOARD' ? 'active' : ''} onClick={() => setCurrentTab('DASHBOARD')}>Bảng điều khiển</button>
                 <button className={currentTab === 'SCORES' ? 'active' : ''} onClick={() => setCurrentTab('SCORES')}>Bảng điểm & Cột điểm</button>
@@ -1033,23 +1376,21 @@
             </div>
           )}
 
-          {}
           <div className="container">
-
-            {/* CHẾ ĐỘ DÀNH CHO KHÁCH (CHƯA ĐĂNG NHẬP): CHỈ HIỂN THỊ DUY NHẤT MÀN HÌNH TRA CỨU */}
+            {/* Chế độ Khách tra cứu duy nhất */}
             {!currentUser && (
-              <div className="card" style={{ maxWidth: 840, margin: '40px auto' }}>
+              <div className="card" style={{ maxWidth: 880, margin: '40px auto' }}>
                 <div className="card-title" style={{ fontSize: '1.25rem', textAlign: 'center', justifyContent: 'center' }}>
                   TRA CỨU KẾT QUẢ ĐIỂM & LỊCH SỬ HỌC TẬP
                 </div>
                 <p style={{ textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: 24 }}>
-                  Học sinh và phụ huynh nhập chính xác Mã học sinh (Ví dụ: HS001) để xem chi tiết bảng điểm và lịch sử.
+                  Học sinh và phụ huynh nhập chính xác Mã học sinh để xem kết quả điểm chi tiết, lịch sử điểm cộng, điểm trừ và điểm cải thiện.
                 </p>
                 <PublicLookupView semesterSetting={semesterSetting} />
               </div>
             )}
 
-            {/* CHẾ ĐỘ DÀNH CHO GIÁO VIÊN: BẢNG ĐIỀU KHIỂN (DASHBOARD) */}
+            {/* Dashboard giáo viên */}
             {currentUser && currentTab === 'DASHBOARD' && (
               <div>
                 <div className="grid-4">
@@ -1076,26 +1417,65 @@
                 <div className="card">
                   <div className="card-title">HỆ THỐNG ĐÃ SẴN SÀNG HOẠT ĐỘNG</div>
                   <p style={{ lineHeight: 1.6, fontSize: '0.9rem', color: '#334155' }}>
-                    Tài khoản <strong>{currentUser.email}</strong> đang có toàn quyền quản trị: Thêm/Sửa/Xóa lớp học, tạo nhóm với snapshot bất biến, chuyển đổi loại cột điểm mà không mất dữ liệu, random học sinh không trùng lặp, nhập điểm chuỗi/bảng và xuất bảng điểm Excel kèm bản xem trước.
+                    Tài khoản giáo viên đã đăng nhập và sẵn sàng thực hiện các thao tác chuyên môn: quản lý học sinh, cấu hình tỉ trọng trực tiếp, ghi nhận điểm cộng và điểm trừ tự động tích lũy, nhập điểm nhóm có snapshot bất biến, random học sinh không trùng lặp và xuất bảng điểm Excel chuẩn hóa.
                   </p>
                 </div>
               </div>
             )}
 
-            {/* BẢNG ĐIỂM & QUẢN LÝ CỘT ĐIỂM */}
+            {/* Bảng điểm & Quản lý cột điểm */}
             {currentUser && currentTab === 'SCORES' && (
               <div>
                 <div className="card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                       <span style={{ fontWeight: 600 }}>Thao tác nâng cao:</span>
+                      <button className="btn btn-success btn-sm" onClick={() => openBonusDeductionModal('CONG')}>+ Điểm cộng mới</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => openBonusDeductionModal('TRU')}>- Điểm trừ mới</button>
                       <button className="btn btn-outline btn-sm" onClick={() => setImprovementModal(true)}>Điểm cải thiện</button>
-                      <button className="btn btn-outline btn-sm" onClick={() => setBonusModal(true)}>Điểm cộng</button>
                     </div>
 
                     <button className="btn btn-primary btn-sm" onClick={() => setExcelPreviewOpen(true)}>
                       Xem trước & Xuất Excel
                     </button>
+                  </div>
+                </div>
+
+                {/* Thẻ lưu tổng điểm cộng và điểm trừ tích lũy */}
+                <div className="card">
+                  <div className="card-title">
+                    <span>TỔNG HỢP ĐIỂM CỘNG & ĐIỂM TRỪ TÍCH LŨY ({semesterSetting.semester})</span>
+                  </div>
+                  <div style={{ maxHeight: 220, overflowY: 'auto' }}>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>STT</th>
+                          <th>Mã HS</th>
+                          <th>Họ và tên</th>
+                          <th>Tổng điểm cộng</th>
+                          <th>Tổng điểm trừ</th>
+                          <th>Điểm chênh lệch áp dụng</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {students.map(st => {
+                          const stat = accumulatedBonusDeduction[st.id] || { totalBonus: 0, totalDeduction: 0, netPoints: 0 };
+                          return (
+                            <tr key={st.id}>
+                              <td>{st.orderNumber}</td>
+                              <td style={{ fontWeight: 600 }}>{st.studentCode}</td>
+                              <td>{st.fullName}</td>
+                              <td style={{ color: 'var(--success)', fontWeight: 600 }}>+{stat.totalBonus}đ</td>
+                              <td style={{ color: 'var(--danger)', fontWeight: 600 }}>-{stat.totalDeduction}đ</td>
+                              <td style={{ fontWeight: 700 }}>
+                                {stat.netPoints > 0 ? `+${stat.netPoints}đ` : (stat.netPoints < 0 ? `${stat.netPoints}đ` : '0đ')}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
 
@@ -1109,7 +1489,7 @@
                         type="text" 
                         required 
                         className="form-control" 
-                        placeholder="VD: Kiểm tra 15 phút lần 1" 
+                        placeholder="VD: Kiểm tra thường xuyên lần 1" 
                         value={newColName} 
                         onChange={(e) => setNewColName(e.target.value)} 
                       />
@@ -1132,32 +1512,86 @@
                   </form>
                 </div>
 
-                {/* Danh sách cột điểm gốc và Nút Chuyển loại cột */}
+                {/* DANH SÁCH CỘT ĐIỂM GỐC CỦA LỚP & TỈ TRỌNG */}
                 <div className="card">
-                  <div className="card-title">DANH SÁCH CỘT ĐIỂM GỐC CỦA LỚP</div>
+                  <div className="card-title">
+                    <span>DANH SÁCH CỘT ĐIỂM GỐC CỦA LỚP & THIẾT LẬP TỈ TRỌNG</span>
+                    <button className="btn btn-primary btn-sm" onClick={handleSaveWeights}>Lưu tỉ trọng</button>
+                  </div>
+
+                  {weightErrorMessage && (
+                    <div style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: 12, fontWeight: 600 }}>
+                      {weightErrorMessage}
+                    </div>
+                  )}
+
+                  {/* Mục tỉ trọng riêng cho Thường xuyên đột xuất */}
+                  <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8, marginBottom: 16, border: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                      <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>Tỉ trọng đóng góp của Thường xuyên đột xuất vào TX Cá nhân (%):</span>
+                      <input 
+                        type="number" 
+                        min="0" 
+                        max="100" 
+                        className="form-control" 
+                        style={{ width: 90, padding: '4px 8px' }} 
+                        value={draftSuddenWeight} 
+                        onChange={(e) => setDraftSuddenWeight(e.target.value)} 
+                      />
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                        Các cột đột xuất tự động cộng trung bình và không cần nhập tỉ trọng riêng lẻ
+                      </span>
+                    </div>
+                  </div>
+
                   <div className="table-container">
                     <table>
                       <thead>
                         <tr>
-                          <th>Tên cột</th>
+                          <th>Tên cột điểm</th>
                           <th>Loại điểm</th>
                           <th>Học kỳ</th>
                           <th>Đã nhập</th>
+                          <th style={{ width: 140 }}>Tỉ trọng (%)</th>
                           <th>Thao tác nhập điểm & Chuyển loại</th>
+                          <th>Xóa cột</th>
                         </tr>
                       </thead>
                       <tbody>
                         {scoreColumns.length === 0 ? (
-                          <tr><td colSpan={5} className="text-center">Chưa có cột điểm nào</td></tr>
+                          <tr><td colSpan={7} className="text-center">Chưa có cột điểm nào</td></tr>
                         ) : (
                           scoreColumns.map(col => {
                             const count = scoreEntries.filter(e => e.scoreColumnId === col.id && e.score !== null).length;
+                            const isSudden = col.type === 'THUONG_XUYEN_DOT_XUAT';
+                            const isExam = col.type === 'GIUA_KY' || col.type === 'CUOI_KY';
+
+                            // Tỉ trọng mặc định chia đều
+                            const sameTypeCols = scoreColumns.filter(c => c.type === col.type && (c.semester === semesterSetting.semester || c.type === 'CHUYEN_DE'));
+                            const defaultEqualWeight = sameTypeCols.length > 0 ? round1(100 / sameTypeCols.length) : 100;
+                            const currentWeightVal = draftWeights[col.id] !== undefined ? draftWeights[col.id] : defaultEqualWeight;
+
                             return (
                               <tr key={col.id}>
                                 <td style={{ fontWeight: 600 }}>{col.name}</td>
                                 <td><span className="badge badge-primary">{col.type}</span></td>
                                 <td>{col.semester}</td>
                                 <td>{count}/{students.length} HS</td>
+                                <td>
+                                  {isSudden || isExam ? (
+                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Không áp dụng</span>
+                                  ) : (
+                                    <input 
+                                      type="number" 
+                                      min="0" 
+                                      max="100" 
+                                      className="form-control" 
+                                      style={{ padding: '3px 8px' }} 
+                                      value={currentWeightVal}
+                                      onChange={(e) => setDraftWeights({ ...draftWeights, [col.id]: e.target.value })}
+                                    />
+                                  )}
+                                </td>
                                 <td style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                                   <button 
                                     className="btn btn-primary btn-sm"
@@ -1184,7 +1618,15 @@
                                       setMoveColModalOpen(true);
                                     }}
                                   >
-                                    Chuyển loại cột
+                                    Chuyển loại
+                                  </button>
+                                </td>
+                                <td>
+                                  <button 
+                                    className="btn btn-danger btn-sm"
+                                    onClick={() => handleDeleteColumn(col)}
+                                  >
+                                    Xóa
                                   </button>
                                 </td>
                               </tr>
@@ -1196,9 +1638,9 @@
                   </div>
                 </div>
 
-                {/* BẢNG TÍNH ĐIỂM TỔNG HỢP */}
+                {/* BẢNG TÍNH ĐIỂM TỔNG HỢP HIỂN THỊ CỘT QUY ĐỔI VÀ XẾP LOẠI */}
                 <div className="card">
-                  <div className="card-title">BẢNG TÍNH ĐIỂM TỔNG HỢP ({semesterSetting.semester})</div>
+                  <div className="card-title">BẢNG TÍNH ĐIỂM TỔNG HỢP & XẾP LOẠI ({semesterSetting.semester})</div>
                   <div className="table-container">
                     <table>
                       <thead>
@@ -1206,34 +1648,73 @@
                           <th>STT</th>
                           <th>Mã HS</th>
                           <th>Họ và tên</th>
-                          {conversionColumns.map(c => <th key={c.id}>{c.name}</th>)}
+                          <th>TX Báo trước (QĐ)</th>
+                          <th>Điểm nhóm (QĐ)</th>
+                          <th>TX Cá nhân (QĐ)</th>
+                          {semesterSetting.calculateSpecialTopic && <th>Chuyên đề (QĐ)</th>}
                           <th>Giữa kỳ (x2)</th>
                           <th>Cuối kỳ (x3)</th>
                           <th style={{ backgroundColor: '#fef3c7' }}>TBHK</th>
+                          <th style={{ backgroundColor: '#fef3c7' }}>Xếp loại HK</th>
                           {semesterSetting.semester === 'HK2' && <th style={{ backgroundColor: '#dcfce7' }}>TBCN</th>}
+                          {semesterSetting.semester === 'HK2' && <th style={{ backgroundColor: '#dcfce7' }}>Xếp loại cả năm</th>}
                         </tr>
                       </thead>
                       <tbody>
-                        {tableCalculations.map(st => (
-                          <tr key={st.studentId}>
-                            <td>{st.orderNumber}</td>
-                            <td style={{ fontWeight: 600 }}>{st.studentCode}</td>
-                            <td>{st.fullName}</td>
-                            {conversionColumns.map(c => (
-                              <td key={c.id}>{formatScore(st.convMap[c.id])}</td>
-                            ))}
-                            <td>{formatScore(st.midterm)}</td>
-                            <td>{formatScore(st.finalScore)}</td>
-                            <td style={{ fontWeight: 700, backgroundColor: '#fef3c7' }}>
-                              {st.tbhk !== null ? formatScore(st.tbhk) : 'Chưa đủ'}
-                            </td>
-                            {semesterSetting.semester === 'HK2' && (
-                              <td style={{ fontWeight: 700, backgroundColor: '#dcfce7' }}>
-                                {st.tbcn !== null ? formatScore(st.tbcn) : 'Chưa đủ'}
-                              </td>
-                            )}
-                          </tr>
-                        ))}
+                        {tableCalculations.length === 0 ? (
+                          <tr><td colSpan={13} className="text-center">Chưa có học sinh trong lớp</td></tr>
+                        ) : (
+                          tableCalculations.map(st => {
+                            if (!st.hasAnyScore) {
+                              return (
+                                <tr key={st.studentId}>
+                                  <td>{st.orderNumber}</td>
+                                  <td style={{ fontWeight: 600 }}>{st.studentCode}</td>
+                                  <td>{st.fullName}</td>
+                                  <td colSpan={semesterSetting.semester === 'HK2' ? 10 : 8} style={{ textAlign: 'center', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                                    Chưa có cột điểm nào
+                                  </td>
+                                </tr>
+                              );
+                            }
+
+                            return (
+                              <tr key={st.studentId}>
+                                <td>{st.orderNumber}</td>
+                                <td style={{ fontWeight: 600 }}>{st.studentCode}</td>
+                                <td>{st.fullName}</td>
+                                <td>{formatScore(st.convertedMap.THUONG_XUYEN_BAO_TRUOC)}</td>
+                                <td>{formatScore(st.convertedMap.DIEM_NHOM)}</td>
+                                <td>{formatScore(st.convertedMap.THUONG_XUYEN_CA_NHAN)}</td>
+                                {semesterSetting.calculateSpecialTopic && (
+                                  <td>{formatScore(st.convertedMap.CHUYEN_DE)}</td>
+                                )}
+                                <td>{formatScore(st.midterm)}</td>
+                                <td>{formatScore(st.finalScore)}</td>
+                                <td style={{ fontWeight: 700, backgroundColor: '#fef3c7' }}>
+                                  {st.tbhk !== null ? formatScore(st.tbhk) : 'Chưa đủ'}
+                                </td>
+                                <td style={{ backgroundColor: '#fef3c7' }}>
+                                  {st.tbhk !== null ? (
+                                    <span className={`badge ${getRankBadgeClass(st.rankHk)}`}>{st.rankHk}</span>
+                                  ) : '-'}
+                                </td>
+                                {semesterSetting.semester === 'HK2' && (
+                                  <td style={{ fontWeight: 700, backgroundColor: '#dcfce7' }}>
+                                    {st.tbcn !== null ? formatScore(st.tbcn) : 'Chưa đủ'}
+                                  </td>
+                                )}
+                                {semesterSetting.semester === 'HK2' && (
+                                  <td style={{ backgroundColor: '#dcfce7' }}>
+                                    {st.tbcn !== null ? (
+                                      <span className={`badge ${getRankBadgeClass(st.rankCn)}`}>{st.rankCn}</span>
+                                    ) : '-'}
+                                  </td>
+                                )}
+                              </tr>
+                            );
+                          })
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -1241,7 +1722,7 @@
               </div>
             )}
 
-            {}
+            {/* Quản lý nhóm */}
             {currentUser && currentTab === 'GROUPS' && (
               <div>
                 <div className="card">
@@ -1313,7 +1794,7 @@
               </div>
             )}
 
-            {}
+            {/* Random học sinh */}
             {currentUser && currentTab === 'RANDOM' && (
               <div className="card">
                 <div className="card-title">RANDOM HỌC SINH THEO LỚP HỌC</div>
@@ -1369,7 +1850,7 @@
               </div>
             )}
 
-            {/* QUẢN LÝ LỚP & HỌC SINH */}
+            {/* Quản lý lớp & Học sinh */}
             {currentUser && currentTab === 'CLASSES' && (
               <div>
                 <div className="grid-2">
@@ -1406,7 +1887,7 @@
                     <div className="card-title">NHẬP DANH SÁCH HỌC SINH THEO STT</div>
                     <form onSubmit={handleImportStudents}>
                       <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 8 }}>
-                        Định dạng mỗi dòng: <code>&lt;STT&gt;,&lt;Mã HS&gt;,&lt;Họ và tên&gt;</code>
+                        Định dạng mỗi dòng: STT,Mã HS,Họ và tên
                       </p>
                       <div className="form-group">
                         <textarea 
@@ -1452,7 +1933,7 @@
               </div>
             )}
 
-            {/* TRA CỨU ĐIỂM (KHI ĐÃ ĐĂNG NHẬP) */}
+            {/* Tra cứu khi đã đăng nhập */}
             {currentUser && currentTab === 'LOOKUP' && (
               <div className="card">
                 <div className="card-title">TRA CỨU KẾT QUẢ ĐIỂM HỌC TẬP</div>
@@ -1463,7 +1944,8 @@
           </div>
 
           {}
-          {/* MODAL: ĐĂNG NHẬP GIÁO VIÊN */}
+
+          {/* Modal Đăng nhập */}
           {loginModalOpen && (
             <div className="modal-overlay">
               <div className="modal-box" style={{ maxWidth: 400 }}>
@@ -1506,7 +1988,103 @@
             </div>
           )}
 
-          {/* MODAL: CHUYỂN LOẠI CỘT ĐIỂM */}
+          {/* Modal Hộp thoại xác nhận hành động xóa */}
+          {confirmModal.open && (
+            <div className="modal-overlay">
+              <div className="modal-box" style={{ maxWidth: 440 }}>
+                <div className="modal-header">
+                  <h3 style={{ color: 'var(--danger)' }}>{confirmModal.title}</h3>
+                  <button className="modal-close" onClick={() => setConfirmModal(prev => ({ ...prev, open: false }))}>×</button>
+                </div>
+                <p style={{ fontSize: '0.9rem', lineHeight: 1.5, marginBottom: 20 }}>
+                  {confirmModal.message}
+                </p>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                  <button className="btn btn-secondary" onClick={() => setConfirmModal(prev => ({ ...prev, open: false }))}>Hủy</button>
+                  <button className="btn btn-danger" onClick={confirmModal.onConfirm}>Xác nhận xóa</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Modal Ghi điểm cộng / Điểm trừ mới */}
+          {bonusDeductionModal && (
+            <div className="modal-overlay">
+              <div className="modal-box" style={{ maxWidth: 680 }}>
+                <div className="modal-header">
+                  <h3>{actionType === 'CONG' ? 'Ghi nhận Điểm Cộng' : 'Ghi nhận Điểm Trừ'} ({semesterSetting.semester})</h3>
+                  <button className="modal-close" onClick={() => setBonusDeductionModal(false)}>×</button>
+                </div>
+
+                <div className="form-group">
+                  <label>Lý do {actionType === 'CONG' ? 'cộng điểm' : 'trừ điểm'}:</label>
+                  <input 
+                    type="text" 
+                    required 
+                    className="form-control" 
+                    placeholder="VD: Phát biểu xây dựng bài sôi nổi, đi học muộn..." 
+                    value={bonusDeductionReason} 
+                    onChange={(e) => setBonusDeductionReason(e.target.value)} 
+                  />
+                </div>
+
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 10 }}>
+                  Chọn mức điểm cho từng học sinh. Học sinh không được chọn mặc định tính là 0 điểm.
+                </p>
+
+                <div style={{ maxHeight: 320, overflowY: 'auto', marginBottom: 16 }}>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>STT</th>
+                        <th>Mã HS</th>
+                        <th>Họ và tên</th>
+                        <th>Mức {actionType === 'CONG' ? 'cộng' : 'trừ'}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {students.map(st => (
+                        <tr key={st.id}>
+                          <td>{st.orderNumber}</td>
+                          <td>{st.studentCode}</td>
+                          <td>{st.fullName}</td>
+                          <td>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                              {[0.25, 0.5, 0.75, 1.0].map(pts => {
+                                const isSelected = bonusDeductionSelections[st.id] === pts;
+                                return (
+                                  <button 
+                                    key={pts} 
+                                    type="button" 
+                                    className={`btn btn-sm ${isSelected ? (actionType === 'CONG' ? 'btn-success' : 'btn-danger') : 'btn-outline'}`}
+                                    onClick={() => {
+                                      setBonusDeductionSelections({
+                                        ...bonusDeductionSelections,
+                                        [st.id]: isSelected ? 0 : pts
+                                      });
+                                    }}
+                                  >
+                                    {actionType === 'CONG' ? `+${pts}` : `-${pts}`}đ
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                  <button className="btn btn-secondary" onClick={() => setBonusDeductionModal(false)}>Hủy</button>
+                  <button className="btn btn-primary" onClick={handleSaveBonusDeduction}>Lưu bản ghi</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Modal Chuyển loại cột điểm */}
           {moveColModalOpen && colToMove && (
             <div className="modal-overlay">
               <div className="modal-box" style={{ maxWidth: 480 }}>
@@ -1534,7 +2112,7 @@
                   </select>
                 </div>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 16 }}>
-                  Hệ thống bảo toàn nguyên vẹn toàn bộ điểm số học sinh đã được nhập trước đó và cập nhật đồng bộ các bản ghi.
+                  Hệ thống bảo toàn nguyên vẹn toàn bộ điểm số học sinh đã được nhập trước đó.
                 </p>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                   <button className="btn btn-secondary" onClick={() => setMoveColModalOpen(false)}>Hủy</button>
@@ -1544,7 +2122,7 @@
             </div>
           )}
 
-          {/* MODAL: NHẬP ĐIỂM CHUỖI CÓ PREVIEW */}
+          {/* Modal Nhập chuỗi */}
           {stringInputModal && activeColForInput && (
             <div className="modal-overlay">
               <div className="modal-box">
@@ -1553,7 +2131,7 @@
                   <button className="modal-close" onClick={() => setStringInputModal(false)}>×</button>
                 </div>
                 <p style={{ fontSize: '0.85rem', marginBottom: 10 }}>
-                  Nhập danh sách điểm phân tách bằng dấu cách theo đúng STT của {students.length} học sinh. Ví dụ: <code>8 7.5 9 6,5</code>
+                  Nhập danh sách điểm phân tách bằng dấu cách theo đúng STT của {students.length} học sinh. Ví dụ: 8 7.5 9 6,5
                 </p>
                 <div className="form-group">
                   <textarea 
@@ -1606,7 +2184,7 @@
             </div>
           )}
 
-          {/* MODAL: NHẬP BẢNG (TABLE INPUT) */}
+          {/* Modal Nhập bảng */}
           {tableInputModal && activeColForTableInput && (
             <div className="modal-overlay">
               <div className="modal-box">
@@ -1652,7 +2230,7 @@
             </div>
           )}
 
-          {/* MODAL: NHẬP ĐIỂM NHÓM KÈM TRẠNG THÁI THAM GIA */}
+          {/* Modal Nhập điểm nhóm */}
           {groupScoreModal && groupScoreTargetCol && groupScoreTargetGroup && (
             <div className="modal-overlay">
               <div className="modal-box" style={{ maxWidth: 500 }}>
@@ -1700,7 +2278,7 @@
             </div>
           )}
 
-          {/* MODAL: ĐIỂM CẢI THIỆN */}
+          {/* Modal Điểm cải thiện */}
           {improvementModal && (
             <div className="modal-overlay">
               <div className="modal-box">
@@ -1766,61 +2344,7 @@
             </div>
           )}
 
-          {/* MODAL: ĐIỂM CỘNG */}
-          {bonusModal && (
-            <div className="modal-overlay">
-              <div className="modal-box">
-                <div className="modal-header">
-                  <h3>Thiết lập điểm cộng (Chỉ cộng vào điểm TX)</h3>
-                  <button className="modal-close" onClick={() => setBonusModal(false)}>×</button>
-                </div>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 12 }}>
-                  1% = 0.1đ | 2.5% = 0.25đ | 5% = 0.5đ | 7.5% = 0.75đ | 10% = 1.0đ. Phân bổ tuần tự từ cột thấp nhất, tuyệt đối không cộng vào GK hay CK.
-                </p>
-                <div style={{ maxHeight: 300, overflowY: 'auto', marginBottom: 16 }}>
-                  <table>
-                    <thead>
-                      <tr><th>STT</th><th>Mã HS</th><th>Họ tên</th><th>Điểm cộng thêm</th></tr>
-                    </thead>
-                    <tbody>
-                      {students.map(st => (
-                        <tr key={st.id}>
-                          <td>{st.orderNumber}</td>
-                          <td>{st.studentCode}</td>
-                          <td>{st.fullName}</td>
-                          <td>
-                            <div style={{ display: 'flex', gap: 6 }}>
-                              {[0.25, 0.5, 0.75, 1.0].map(pts => (
-                                <button 
-                                  key={pts} 
-                                  className={`btn btn-sm ${(appliedBonuses[st.id] === pts) ? 'btn-success' : 'btn-outline'}`}
-                                  onClick={() => setAppliedBonuses({ ...appliedBonuses, [st.id]: pts })}
-                                >
-                                  +{pts}đ
-                                </button>
-                              ))}
-                              {appliedBonuses[st.id] && (
-                                <button className="btn btn-sm btn-danger" onClick={() => {
-                                  const c = { ...appliedBonuses };
-                                  delete c[st.id];
-                                  setAppliedBonuses(c);
-                                }}>Xóa</button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-                  <button className="btn btn-primary" onClick={() => setBonusModal(false)}>Hoàn tất</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* MODAL: XEM TRƯỚC BẢNG ĐIỂM EXCEL */}
+          {/* Modal Xem trước Excel */}
           {excelPreviewOpen && (
             <div className="modal-overlay">
               <div className="modal-box">
@@ -1828,12 +2352,16 @@
                   <h3>XEM TRƯỚC BẢNG ĐIỂM XUẤT EXCEL ({semesterSetting.semester})</h3>
                   <button className="modal-close" onClick={() => setExcelPreviewOpen(false)}>×</button>
                 </div>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 12 }}>
+                  Lưu ý: Các cột xếp loại chỉ hiển thị trên web và tra cứu, không đưa vào file Excel đã xuất.
+                </p>
                 <div style={{ maxHeight: 380, overflowY: 'auto', marginBottom: 16 }}>
                   <table>
                     <thead>
                       <tr>
                         <th>STT</th><th>Mã HS</th><th>Họ tên</th>
-                        {conversionColumns.map(c => <th key={c.id}>{c.name}</th>)}
+                        <th>TX Báo trước (QĐ)</th><th>Điểm nhóm (QĐ)</th><th>TX Cá nhân (QĐ)</th>
+                        {semesterSetting.calculateSpecialTopic && <th>Chuyên đề (QĐ)</th>}
                         <th>Giữa kỳ</th><th>Cuối kỳ</th><th>TBHK</th>
                         {semesterSetting.semester === 'HK2' && <th>TBCN</th>}
                       </tr>
@@ -1842,11 +2370,14 @@
                       {tableCalculations.map(st => (
                         <tr key={st.studentId}>
                           <td>{st.orderNumber}</td><td>{st.studentCode}</td><td>{st.fullName}</td>
-                          {conversionColumns.map(c => <td key={c.id}>{formatScore(st.convMap[c.id])}</td>)}
+                          <td>{formatScore(st.convertedMap.THUONG_XUYEN_BAO_TRUOC)}</td>
+                          <td>{formatScore(st.convertedMap.DIEM_NHOM)}</td>
+                          <td>{formatScore(st.convertedMap.THUONG_XUYEN_CA_NHAN)}</td>
+                          {semesterSetting.calculateSpecialTopic && <td>{formatScore(st.convertedMap.CHUYEN_DE)}</td>}
                           <td>{formatScore(st.midterm)}</td><td>{formatScore(st.finalScore)}</td>
-                          <td style={{ fontWeight: 600 }}>{formatScore(st.tbhk)}</td>
+                          <td style={{ fontWeight: 600 }}>{st.tbhk !== null ? formatScore(st.tbhk) : '-'}</td>
                           {semesterSetting.semester === 'HK2' && (
-                            <td style={{ fontWeight: 600 }}>{formatScore(st.tbcn)}</td>
+                            <td style={{ fontWeight: 600 }}>{st.tbcn !== null ? formatScore(st.tbcn) : '-'}</td>
                           )}
                         </tr>
                       ))}
@@ -1865,12 +2396,12 @@
       );
     }
 
-    // GIAO DIỆN TRA CỨU ĐIỂM CÔNG KHAI DÀNH CHO KHÁCH & HỌC SINH
     function PublicLookupView({ semesterSetting }) {
       const [lookupCode, setLookupCode] = useState('');
       const [searching, setSearching] = useState(false);
       const [studentData, setStudentData] = useState(null);
       const [historyRows, setHistoryRows] = useState([]);
+      const [studentSummary, setStudentSummary] = useState(null);
       const [msg, setMsg] = useState('');
 
       const handleSearch = async (e) => {
@@ -1881,6 +2412,7 @@
         setMsg('');
         setStudentData(null);
         setHistoryRows([]);
+        setStudentSummary(null);
 
         try {
           const db = firebase.firestore();
@@ -1896,11 +2428,32 @@
           const st = stSnap.docs[0].data();
           setStudentData(st);
 
+          // Lấy lịch sử điểm, điểm cộng, điểm trừ, điểm cải thiện
           const hSnap = await db.collection('scoreHistory').where('studentCode', '==', qCode).get();
           const list = [];
           hSnap.forEach(d => list.push(d.data()));
           list.sort((a, b) => b.timestamp - a.timestamp);
           setHistoryRows(list);
+
+          // Tính toán nhanh kết quả điểm hiện thời
+          const entSnap = await db.collection('scoreEntries')
+            .where('classId', '==', st.classId)
+            .where('studentId', '==', st.id)
+            .get();
+
+          let mid = null;
+          let fin = null;
+          entSnap.forEach(d => {
+            const data = d.data();
+            if (data.scoreType === 'GIUA_KY' && data.semester === semesterSetting.semester) mid = data.score;
+            if (data.scoreType === 'CUOI_KY' && data.semester === semesterSetting.semester) fin = data.score;
+          });
+
+          setStudentSummary({
+            midterm: mid,
+            finalScore: fin
+          });
+
         } catch (err) {
           setMsg('Lỗi tra cứu: ' + err.message);
         } finally {
@@ -1932,21 +2485,27 @@
               <div style={{ background: '#f1f5f9', padding: 16, borderRadius: 8, marginBottom: 20 }}>
                 <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--primary)' }}>{studentData.fullName}</div>
                 <div style={{ fontSize: '0.85rem', color: '#475569', marginTop: 4 }}>
-                  Mã học sinh: <strong>{studentData.studentCode}</strong> | STT trong lớp: <strong>{studentData.orderNumber}</strong>
+                  Mã học sinh: <strong>{studentData.studentCode}</strong> | STT: <strong>{studentData.orderNumber}</strong>
                 </div>
+                {studentSummary && (
+                  <div style={{ marginTop: 10, display: 'flex', gap: 16, fontSize: '0.85rem' }}>
+                    <span>Giữa kỳ: <strong>{formatScore(studentSummary.midterm)}</strong></span>
+                    <span>Cuối kỳ: <strong>{formatScore(studentSummary.finalScore)}</strong></span>
+                  </div>
+                )}
               </div>
 
-              <h4 style={{ fontSize: '0.95rem', marginBottom: 10, color: 'var(--primary)' }}>LỊCH SỬ NHẬP ĐIỂM CỦA HỌC SINH</h4>
+              <h4 style={{ fontSize: '0.95rem', marginBottom: 10, color: 'var(--primary)' }}>LỊCH SỬ ĐIỂM, ĐIỂM CỘNG, ĐIỂM TRỪ & ĐIỂM CẢI THIỆN</h4>
               <div className="table-container">
                 <table>
                   <thead>
                     <tr>
                       <th>Thời gian</th>
                       <th>Học kỳ</th>
-                      <th>Loại điểm</th>
-                      <th>Cột điểm</th>
-                      <th>Điểm</th>
-                      <th>Ghi chú & Trạng thái</th>
+                      <th>Loại ghi nhận</th>
+                      <th>Cột điểm / Tác vụ</th>
+                      <th>Điểm / Mức</th>
+                      <th>Lý do & Trạng thái</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1957,9 +2516,18 @@
                         <tr key={i}>
                           <td>{new Date(r.timestamp).toLocaleDateString('vi-VN')}</td>
                           <td>{r.semester || '-'}</td>
-                          <td><span className="badge badge-primary">{r.scoreType || '-'}</span></td>
+                          <td>
+                            <span className={`badge ${
+                              r.scoreType === 'DIEM_CONG' ? 'badge-success' : 
+                              (r.scoreType === 'DIEM_TRU' ? 'badge-danger' : 'badge-primary')
+                            }`}>
+                              {r.scoreType}
+                            </span>
+                          </td>
                           <td>{r.scoreColumnName || '-'}</td>
-                          <td style={{ fontWeight: 700, color: 'var(--primary)' }}>{formatScore(r.newScore)}</td>
+                          <td style={{ fontWeight: 700, color: r.scoreType === 'DIEM_TRU' ? 'var(--danger)' : 'var(--primary)' }}>
+                            {r.scoreType === 'DIEM_CONG' ? `+${r.newScore}đ` : (r.scoreType === 'DIEM_TRU' ? `${r.newScore}đ` : formatScore(r.newScore))}
+                          </td>
                           <td>
                             {r.participationStatus === 'KHONG_THAM_GIA' ? (
                               <span style={{ color: 'var(--danger)', fontWeight: 600 }}>Không tham gia nhóm (0 điểm)</span>
