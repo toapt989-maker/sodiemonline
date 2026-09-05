@@ -3,22 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hệ Thống Quản Lý Lớp Học, Điểm Số & Đánh Giá Học Sinh</title>
-  
-  <!-- Thư viện React 18, ReactDOM, Babel Standalone -->
+  <title>Hệ Thống Quản Lý Lớp Học & Điểm Số</title>
+
+  <!-- React 18, ReactDOM, Babel Standalone -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  
-  <!-- Thư viện SheetJS xuất Excel -->
+
+  <!-- SheetJS (XLSX) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Firebase v10 Compat CDN (Hoạt động ổn định trên file HTML đơn lẻ) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <style>
     :root {
       --primary: #1e40af;
-      --primary-hover: #1d4ed8;
-      --bg: #f1f5f9;
-      --card-bg: #ffffff;
+      --primary-dark: #1e3a8a;
+      --bg: #f8fafc;
+      --card: #ffffff;
       --border: #cbd5e1;
       --text: #0f172a;
       --text-muted: #64748b;
@@ -27,117 +32,62 @@
       --warning: #d97706;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding-bottom: 60px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding-bottom: 50px; }
 
-    header { background-color: var(--primary); color: white; padding: 14px 20px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    header { background-color: var(--primary); color: white; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     header h1 { font-size: 1.15rem; font-weight: 700; }
-    .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .header-actions { display: flex; align-items: center; gap: 10px; }
 
-    nav { background-color: #ffffff; border-bottom: 1px solid var(--border); display: flex; overflow-x: auto; padding: 0 10px; }
-    nav button { background: none; border: none; padding: 12px 16px; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; }
-    nav button.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .nav-bar { background-color: #ffffff; border-bottom: 1px solid var(--border); display: flex; overflow-x: auto; padding: 0 10px; }
+    .nav-bar button { background: none; border: none; padding: 12px 18px; font-size: 0.9rem; font-weight: 600; color: var(--text-muted); cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; }
+    .nav-bar button.active { color: var(--primary); border-bottom-color: var(--primary); }
 
-    .container { max-width: 1280px; margin: 20px auto; padding: 0 16px; }
-    .card { background-color: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; color: var(--primary); border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+    .container { max-width: 1240px; margin: 20px auto; padding: 0 16px; }
+    .card { background-color: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .card-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 16px; color: var(--primary); border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
 
-    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
     .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
     .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
 
     .form-group { margin-bottom: 14px; }
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; }
     .form-control { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; }
-    textarea.form-control { resize: vertical; min-height: 80px; }
+    textarea.form-control { resize: vertical; min-height: 90px; }
 
-    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 8px 16px; font-size: 0.85rem; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; transition: all 0.2s; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 8px 16px; font-size: 0.85rem; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; transition: 0.2s; }
     .btn-primary { background-color: var(--primary); color: white; }
-    .btn-primary:hover { background-color: var(--primary-hover); }
+    .btn-primary:hover { background-color: var(--primary-dark); }
     .btn-danger { background-color: var(--danger); color: white; }
     .btn-success { background-color: var(--success); color: white; }
     .btn-warning { background-color: var(--warning); color: white; }
     .btn-secondary { background-color: #64748b; color: white; }
-    .btn-sm { padding: 4px 8px; font-size: 0.75rem; }
+    .btn-sm { padding: 5px 10px; font-size: 0.78rem; }
 
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
     table th, table td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; }
     table th { background-color: #f8fafc; font-weight: 600; }
-    table tr:nth-child(even) { background-color: #fdfdfd; }
+    table tr:nth-child(even) { background-color: #fdfdfe; }
 
-    .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
     .badge-primary { background-color: #dbeafe; color: #1e40af; }
-    .badge-danger { background-color: #fee2e2; color: #991b1b; }
     .badge-success { background-color: #dcfce7; color: #166534; }
+    .badge-danger { background-color: #fee2e2; color: #991b1b; }
 
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+    .modal-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
     .modal-box { background-color: white; border-radius: 8px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-    .modal-close { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); }
+    .modal-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted); }
 
-    .random-badge-card { background: #eff6ff; border: 2px dashed #3b82f6; border-radius: 8px; padding: 16px; text-align: center; margin: 10px 0; }
-    .random-badge-number { font-size: 1.8rem; font-weight: 800; color: #1e40af; }
-    .random-badge-name { font-size: 1.2rem; font-weight: 700; color: #0f172a; margin-top: 4px; }
-    .random-badge-code { font-size: 0.85rem; color: #64748b; }
+    .random-box { background: #eff6ff; border: 2px dashed #3b82f6; border-radius: 8px; padding: 16px; text-align: center; }
+    .random-num { font-size: 1.8rem; font-weight: 800; color: #1e40af; }
+    .random-name { font-size: 1.1rem; font-weight: 700; margin-top: 4px; }
   </style>
 </head>
 <body>
   <div id="root"></div>
 
-  <!-- Thiết lập Firebase Modular SDK qua ESM/Script -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { 
-      getAuth, 
-      signInWithEmailAndPassword, 
-      signOut, 
-      onAuthStateChanged 
-    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { 
-      getFirestore, 
-      collection, 
-      doc, 
-      getDoc, 
-      getDocs, 
-      setDoc, 
-      updateDoc, 
-      deleteDoc, 
-      query, 
-      where, 
-      writeBatch 
-    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-    // CẤU HÌNH DỰ ÁN FIREBASE - THAY THẾ BẰNG CẤU HÌNH THẬT KHI DEPLOY
-    const firebaseConfig = {
-      apiKey: "AIzaSyDummyKeyReplaceWithActualFirebaseWebConfig",
-      authDomain: "school-grade-prod.firebaseapp.com",
-      projectId: "school-grade-prod",
-      storageBucket: "school-grade-prod.appspot.com",
-      messagingSenderId: "1234567890",
-      appId: "1:1234567890:web:abcdef123456"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    window.fbAuth = getAuth(app);
-    window.fbDb = getFirestore(app);
-    window.fbOps = {
-      signInWithEmailAndPassword,
-      signOut,
-      onAuthStateChanged,
-      collection,
-      doc,
-      getDoc,
-      getDocs,
-      setDoc,
-      updateDoc,
-      deleteDoc,
-      query,
-      where,
-      writeBatch
-    };
-  </script>
-
-  <!-- LOGIC ỨNG DỤNG REACT VÀ BABEL -->
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
 
@@ -145,13 +95,30 @@
     const round2 = (val) => Math.round(val * 100) / 100;
     const formatScore = (val) => (val === null || val === undefined || isNaN(val)) ? '-' : val.toString().replace('.', ',');
 
-    function App() {
-      const [currentUser, setCurrentUser] = useState(null);
-      const [userRole, setUserRole] = useState('GUEST');
-      const [authChecking, setAuthChecking] = useState(true);
-      const [currentTab, setCurrentTab] = useState('DASHBOARD');
+    const DEFAULT_CONFIG = {
+      apiKey: "AIzaSyDUMMY_KEY_REPLACE_WITH_YOUR_KEY",
+      authDomain: "school-grade-prod.firebaseapp.com",
+      projectId: "school-grade-prod",
+      storageBucket: "school-grade-prod.appspot.com",
+      messagingSenderId: "1234567890",
+      appId: "1:1234567890:web:abcdef123456"
+    };
 
-      // Dữ liệu cốt lõi
+    function App() {
+      const [firebaseReady, setFirebaseReady] = useState(false);
+      const [configModal, setConfigModal] = useState(false);
+      const [customConfigText, setCustomConfigText] = useState('');
+      
+      const [currentUser, setCurrentUser] = useState(null);
+      const [loginModalOpen, setLoginModalOpen] = useState(false);
+      const [loginEmail, setLoginEmail] = useState('');
+      const [loginPass, setLoginPass] = useState('');
+      const [loginError, setLoginError] = useState('');
+      const [loginLoading, setLoginLoading] = useState(false);
+
+      const [currentTab, setCurrentTab] = useState('LOOKUP'); // Mặc định khách vào chỉ thấy Tra cứu
+
+      // Dữ liệu ứng dụng
       const [semesterSetting, setSemesterSetting] = useState({ semester: 'HK1', calculateSpecialTopic: false });
       const [classes, setClasses] = useState([]);
       const [selectedClassId, setSelectedClassId] = useState('');
@@ -163,298 +130,428 @@
       const [conversionColumns, setConversionColumns] = useState([]);
       const [conversionMappings, setConversionMappings] = useState([]);
 
-      // Đăng nhập
-      const [loginEmail, setLoginEmail] = useState('');
-      const [loginPass, setLoginPass] = useState('');
-      const [loginError, setLoginError] = useState('');
+      // Tính năng Random học sinh
+      const [randomClassId, setRandomClassId] = useState('');
+      const [randomQty, setRandomQty] = useState(1);
+      const [randomResults, setRandomResults] = useState([]);
 
-      // Random học sinh state
-      const [randomCount, setRandomCount] = useState(1);
-      const [randomSelectedClassId, setRandomSelectedClassId] = useState('');
-      const [randomResultList, setRandomResultList] = useState([]);
-
-      // Modal chuyển cột điểm
-      const [moveColModalOpen, setMoveColModalOpen] = useState(false);
-      const [selectedColToMove, setSelectedColToMove] = useState(null);
+      // Tính năng Chuyển loại cột điểm
+      const [colToMove, setColToMove] = useState(null);
       const [targetScoreType, setTargetScoreType] = useState('THUONG_XUYEN_BAO_TRUOC');
+
+      // Tạo cột điểm mới
+      const [newColName, setNewColName] = useState('');
+      const [newColType, setNewColType] = useState('THUONG_XUYEN_BAO_TRUOC');
+
+      // Nhập điểm theo chuỗi
+      const [stringInputModal, setStringInputModal] = useState(false);
+      const [activeColumnForInput, setActiveColumnForInput] = useState(null);
+      const [rawScoreString, setRawScoreString] = useState('');
+      const [parsedPreviewScores, setParsedPreviewScores] = useState(null);
+      const [stringInputError, setStringInputError] = useState('');
 
       // Modal Excel Preview
       const [excelPreviewOpen, setExcelPreviewOpen] = useState(false);
 
-      // Theo dõi Authentication
+      // KHỞI TẠO FIREBASE
       useEffect(() => {
-        const checkFB = setInterval(() => {
-          if (window.fbAuth && window.fbOps) {
-            clearInterval(checkFB);
-            window.fbOps.onAuthStateChanged(window.fbAuth, async (user) => {
-              if (user) {
-                setCurrentUser(user);
-                if (user.email === 'toapt989@gmail.com') {
-                  setUserRole('SUPER_ADMIN');
-                } else {
-                  try {
-                    const uDoc = await window.fbOps.getDoc(window.fbOps.doc(window.fbDb, 'users', user.uid));
-                    if (uDoc.exists()) {
-                      setUserRole(uDoc.data().role || 'TEACHER');
-                    } else {
-                      setUserRole('TEACHER');
-                    }
-                  } catch (e) {
-                    setUserRole('TEACHER');
-                  }
-                }
-              } else {
-                setCurrentUser(null);
-                setUserRole('GUEST');
-              }
-              setAuthChecking(false);
-            });
+        try {
+          const savedConfig = localStorage.getItem('APP_FIREBASE_CONFIG');
+          const configToUse = savedConfig ? JSON.parse(savedConfig) : DEFAULT_CONFIG;
+          setCustomConfigText(JSON.stringify(configToUse, null, 2));
+
+          if (!firebase.apps.length) {
+            firebase.initializeApp(configToUse);
           }
-        }, 100);
+          
+          firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+              setCurrentUser(user);
+              setCurrentTab('DASHBOARD'); // Khi đăng nhập thành công thì chuyển sang Dashboard
+            } else {
+              setCurrentUser(null);
+              setCurrentTab('LOOKUP'); // Khách chỉ thấy màn hình tra cứu
+            }
+          });
+
+          setFirebaseReady(true);
+        } catch (e) {
+          console.error("Lỗi khởi tạo Firebase:", e);
+          setConfigModal(true);
+        }
       }, []);
 
-      // Đọc cài đặt học kỳ và danh sách lớp
-      const fetchGlobalData = async () => {
-        if (!window.fbDb) return;
+      // Lưu cấu hình Firebase tùy chỉnh
+      const handleSaveCustomConfig = () => {
         try {
-          const sDoc = await window.fbOps.getDoc(window.fbOps.doc(window.fbDb, 'semesterSettings', 'GLOBAL_CONFIG'));
-          if (sDoc.exists()) {
+          const parsed = JSON.parse(customConfigText);
+          localStorage.setItem('APP_FIREBASE_CONFIG', JSON.stringify(parsed));
+          alert('Đã lưu cấu hình! Trang sẽ tải lại để áp dụng kết nối.');
+          window.location.reload();
+        } catch (err) {
+          alert('Định dạng JSON cấu hình không hợp lệ: ' + err.message);
+        }
+      };
+
+      // TẢI DỮ LIỆU CHUNG
+      const fetchGlobalSettingsAndClasses = async () => {
+        if (!firebaseReady) return;
+        const db = firebase.firestore();
+        try {
+          const sDoc = await db.collection('semesterSettings').doc('GLOBAL_CONFIG').get();
+          if (sDoc.exists) {
             setSemesterSetting(sDoc.data());
           }
 
-          const cSnap = await window.fbOps.getDocs(window.fbOps.collection(window.fbDb, 'classes'));
+          const cSnap = await db.collection('classes').get();
           const cList = [];
           cSnap.forEach(d => cList.push({ id: d.id, ...d.data() }));
           setClasses(cList);
           if (cList.length > 0 && !selectedClassId) {
             setSelectedClassId(cList[0].id);
-            setRandomSelectedClassId(cList[0].id);
+            setRandomClassId(cList[0].id);
           }
-        } catch (e) {
-          console.error("Lỗi khi nạp dữ liệu chung:", e);
+        } catch (err) {
+          console.log("Thông báo nạp dữ liệu chung:", err.message);
         }
       };
 
       useEffect(() => {
-        if (!authChecking) fetchGlobalData();
-      }, [authChecking]);
+        if (firebaseReady) fetchGlobalSettingsAndClasses();
+      }, [firebaseReady, currentUser]);
 
-      // Nạp dữ liệu học sinh, nhóm, cột điểm, điểm của lớp đang chọn
-      const fetchClassSpecificData = async (classId) => {
-        if (!classId || !window.fbDb) return;
+      // TẢI DỮ LIỆU CỦA LỚP ĐANG CHỌN (KHI ĐÃ ĐĂNG NHẬP)
+      const fetchClassData = async (classId) => {
+        if (!classId || !firebaseReady || !currentUser) return;
+        const db = firebase.firestore();
         try {
-          // Lấy danh sách học sinh
-          const stQ = window.fbOps.query(window.fbOps.collection(window.fbDb, 'students'), window.fbOps.where('classId', '==', classId));
-          const stSnap = await window.fbOps.getDocs(stQ);
+          // 1. Học sinh
+          const stSnap = await db.collection('students').where('classId', '==', classId).get();
           const stList = [];
           stSnap.forEach(d => stList.push({ id: d.id, ...d.data() }));
           stList.sort((a, b) => a.orderNumber - b.orderNumber);
           setStudents(stList);
 
-          // Lấy nhóm
-          const grpQ = window.fbOps.query(window.fbOps.collection(window.fbDb, 'groups'), window.fbOps.where('classId', '==', classId));
-          const grpSnap = await window.fbOps.getDocs(grpQ);
+          // 2. Nhóm
+          const grpSnap = await db.collection('groups').where('classId', '==', classId).get();
           const grpList = [];
           grpSnap.forEach(d => grpList.push({ id: d.id, ...d.data() }));
           setGroups(grpList);
 
-          // Lấy cột điểm
-          const colQ = window.fbOps.query(window.fbOps.collection(window.fbDb, 'scoreColumns'), window.fbOps.where('classId', '==', classId));
-          const colSnap = await window.fbOps.getDocs(colQ);
+          // 3. Cột điểm
+          const colSnap = await db.collection('scoreColumns').where('classId', '==', classId).get();
           const colList = [];
           colSnap.forEach(d => colList.push({ id: d.id, ...d.data() }));
           setScoreColumns(colList);
 
-          // Lấy điểm nhập
-          const scQ = window.fbOps.query(window.fbOps.collection(window.fbDb, 'scoreEntries'), window.fbOps.where('classId', '==', classId));
-          const scSnap = await window.fbOps.getDocs(scQ);
+          // 4. Điểm nhập
+          const scSnap = await db.collection('scoreEntries').where('classId', '==', classId).get();
           const scList = [];
           scSnap.forEach(d => scList.push({ id: d.id, ...d.data() }));
           setScoreEntries(scList);
 
-          // Lấy lịch sử điểm
-          const hQ = window.fbOps.query(window.fbOps.collection(window.fbDb, 'scoreHistory'), window.fbOps.where('classId', '==', classId));
-          const hSnap = await window.fbOps.getDocs(hQ);
+          // 5. Lịch sử điểm
+          const hSnap = await db.collection('scoreHistory').where('classId', '==', classId).get();
           const hList = [];
           hSnap.forEach(d => hList.push({ id: d.id, ...d.data() }));
           hList.sort((a, b) => b.timestamp - a.timestamp);
           setScoreHistories(hList);
 
-          // Lấy cấu hình quy đổi
-          const cvQ = window.fbOps.query(window.fbOps.collection(window.fbDb, 'conversionColumns'), window.fbOps.where('classId', '==', classId));
-          const cvSnap = await window.fbOps.getDocs(cvQ);
+          // 6. Cột quy đổi
+          const cvSnap = await db.collection('conversionColumns').where('classId', '==', classId).get();
           const cvList = [];
           cvSnap.forEach(d => cvList.push({ id: d.id, ...d.data() }));
           setConversionColumns(cvList);
 
-          // Lấy ánh xạ quy đổi
-          const mpSnap = await window.fbOps.getDocs(window.fbOps.collection(window.fbDb, 'conversionMappings'));
+          // 7. Mappings
+          const mpSnap = await db.collection('conversionMappings').get();
           const mpList = [];
           mpSnap.forEach(d => mpList.push({ id: d.id, ...d.data() }));
           setConversionMappings(mpList);
-
         } catch (e) {
-          console.error("Lỗi khi nạp dữ liệu chi tiết lớp:", e);
+          console.error("Lỗi khi tải dữ liệu lớp:", e);
         }
       };
 
       useEffect(() => {
-        if (selectedClassId) fetchClassSpecificData(selectedClassId);
-      }, [selectedClassId]);
+        if (selectedClassId && currentUser) fetchClassData(selectedClassId);
+      }, [selectedClassId, currentUser]);
 
-      // Xử lý đăng nhập / đăng xuất
-      const handleLogin = async (e) => {
+      // XỬ LÝ ĐĂNG NHẬP
+      const handleLoginSubmit = async (e) => {
         e.preventDefault();
         setLoginError('');
+        setLoginLoading(true);
+
         try {
-          await window.fbOps.signInWithEmailAndPassword(window.fbAuth, loginEmail, loginPass);
+          await firebase.auth().signInWithEmailAndPassword(loginEmail.trim(), loginPass);
+          setLoginModalOpen(false);
+          setLoginEmail('');
+          setLoginPass('');
         } catch (err) {
-          setLoginError('Đăng nhập thất bại: ' + err.message);
+          console.error("Login Error:", err);
+          if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+            setLoginError('Email hoặc mật khẩu không chính xác.');
+          } else if (err.code === 'auth/invalid-email') {
+            setLoginError('Định dạng email không hợp lệ.');
+          } else if (err.code === 'auth/network-request-failed') {
+            setLoginError('Lỗi kết nối mạng hoặc sai cấu hình Firebase.');
+          } else {
+            setLoginError('Lỗi đăng nhập: ' + err.message);
+          }
+        } finally {
+          setLoginLoading(false);
         }
       };
 
       const handleLogout = async () => {
-        await window.fbOps.signOut(window.fbAuth);
-        setCurrentTab('DASHBOARD');
+        await firebase.auth().signOut();
+        setCurrentTab('LOOKUP');
       };
 
-      // Chuyển đổi học kỳ
-      const handleSaveSemesterConfig = async (newSem, calcSpecial) => {
-        const payload = { semester: newSem, calculateSpecialTopic: calcSpecial, updatedAt: Date.now() };
-        await window.fbOps.setDoc(window.fbOps.doc(window.fbDb, 'semesterSettings', 'GLOBAL_CONFIG'), payload);
-        setSemesterSetting(payload);
-      };
-
-      // TÍNH TOÁN RANDOM HỌC SINH
-      const handleExecuteRandom = async () => {
-        if (!randomSelectedClassId) {
-          alert('Vui lòng chọn lớp cần random học sinh');
-          return;
-        }
-
-        // Lấy danh sách học sinh của lớp được chọn
-        const stQ = window.fbOps.query(window.fbOps.collection(window.fbDb, 'students'), window.fbOps.where('classId', '==', randomSelectedClassId));
-        const stSnap = await window.fbOps.getDocs(stQ);
-        const classStudents = [];
-        stSnap.forEach(d => classStudents.push({ id: d.id, ...d.data() }));
-
-        if (classStudents.length === 0) {
-          alert('Lớp học này hiện chưa có danh sách học sinh');
-          setRandomResultList([]);
-          return;
-        }
-
-        const count = Math.min(Math.max(1, parseInt(randomCount) || 1), classStudents.length);
-        
-        // Thuật toán xáo trộn ngẫu nhiên Fisher-Yates không trùng lặp
-        const shuffled = [...classStudents];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-
-        setRandomResultList(shuffled.slice(0, count));
-      };
-
-      // CHUYỂN ĐỔI LOẠI CỦA CỘT ĐIỂM ĐÃ NHẬP
-      const handleExecuteMoveScoreColumn = async () => {
-        if (!selectedColToMove || !targetScoreType) return;
+      // LƯU CẤU HÌNH HỌC KỲ
+      const handleSaveSemesterSetting = async (sem, calcSpecial) => {
+        const payload = { semester: sem, calculateSpecialTopic: calcSpecial, updatedAt: Date.now() };
         try {
-          const colRef = window.fbOps.doc(window.fbDb, 'scoreColumns', selectedColToMove.id);
-          await window.fbOps.updateDoc(colRef, { type: targetScoreType });
+          await firebase.firestore().collection('semesterSettings').doc('GLOBAL_CONFIG').set(payload);
+          setSemesterSetting(payload);
+        } catch (e) {
+          alert('Không thể lưu cấu hình: ' + e.message);
+        }
+      };
 
-          // Cập nhật toàn bộ scoreEntries thuộc cột này mà không thay đổi giá trị điểm
-          const batch = window.fbOps.writeBatch(window.fbDb);
-          const relatedEntries = scoreEntries.filter(e => e.scoreColumnId === selectedColToMove.id);
-          
-          relatedEntries.forEach(entry => {
-            const entryRef = window.fbOps.doc(window.fbDb, 'scoreEntries', entry.id);
+      // THÊM CỘT ĐIỂM
+      const handleCreateColumn = async (e) => {
+        e.preventDefault();
+        if (!newColName.trim() || !selectedClassId) return;
+        try {
+          const colRef = firebase.firestore().collection('scoreColumns').doc();
+          await colRef.set({
+            id: colRef.id,
+            classId: selectedClassId,
+            name: newColName.trim(),
+            type: newColType,
+            semester: semesterSetting.semester,
+            createdAt: Date.now()
+          });
+          setNewColName('');
+          alert('Đã tạo cột điểm mới');
+          fetchClassData(selectedClassId);
+        } catch (err) {
+          alert('Lỗi tạo cột: ' + err.message);
+        }
+      };
+
+      // CHUYỂN ĐỔI LOẠI CỘT ĐIỂM (BẢO TOÀN ĐIỂM ĐÃ NHẬP)
+      const handleExecuteChangeColumnType = async () => {
+        if (!colToMove || !targetScoreType) return;
+        try {
+          const db = firebase.firestore();
+          const batch = db.batch();
+
+          // 1. Cập nhật type ở scoreColumns
+          const colRef = db.collection('scoreColumns').doc(colToMove.id);
+          batch.update(colRef, { type: targetScoreType });
+
+          // 2. Cập nhật type trong các bản ghi scoreEntries của cột đó
+          const relEntries = scoreEntries.filter(e => e.scoreColumnId === colToMove.id);
+          relEntries.forEach(entry => {
+            const entryRef = db.collection('scoreEntries').doc(entry.id);
             batch.update(entryRef, { scoreType: targetScoreType });
           });
 
-          // Ghi lịch sử chuyển loại cột điểm
-          const hRef = window.fbOps.doc(window.fbOps.collection(window.fbDb, 'scoreHistory'));
-          batch.set(hRef, {
-            id: hRef.id,
+          // 3. Ghi vết lịch sử chuyển đổi cột
+          const histRef = db.collection('scoreHistory').doc();
+          batch.set(histRef, {
+            id: histRef.id,
             classId: selectedClassId,
-            scoreColumnName: selectedColToMove.name,
-            reason: `Chuyển loại cột điểm từ ${selectedColToMove.type} sang ${targetScoreType}`,
+            scoreColumnName: colToMove.name,
+            reason: `Chuyển cột từ [${colToMove.type}] sang [${targetScoreType}]`,
             timestamp: Date.now(),
             modifiedBy: currentUser.email,
             participationStatus: 'KHONG_AP_DUNG'
           });
 
           await batch.commit();
-
-          alert('Đã chuyển loại cột điểm thành công. Toàn bộ điểm số được giữ nguyên.');
-          setMoveColModalOpen(false);
-          fetchClassSpecificData(selectedClassId);
-        } catch (e) {
-          alert('Lỗi khi chuyển đổi loại cột: ' + e.message);
+          alert('Đã chuyển loại cột điểm thành công. Toàn bộ điểm số học sinh được giữ nguyên.');
+          setColToMove(null);
+          fetchClassData(selectedClassId);
+        } catch (err) {
+          alert('Lỗi chuyển loại cột: ' + err.message);
         }
       };
 
-      // TÍNH TOÁN BẢNG ĐIỂM CHI TIẾT
-      const calculatedTableData = useMemo(() => {
-        const targetClass = classes.find(c => c.id === selectedClassId);
-        const hasSpecial = targetClass ? targetClass.hasSpecialTopic : true;
+      // XỬ LÝ NHẬP ĐIỂM DẠNG CHUỖI
+      const handlePreviewScoreString = () => {
+        setStringInputError('');
+        setParsedPreviewScores(null);
+
+        if (!rawScoreString.trim()) {
+          setStringInputError('Vui lòng nhập chuỗi điểm');
+          return;
+        }
+
+        const tokens = rawScoreString.trim().split(/\s+/).map(s => s.replace(',', '.'));
+        if (tokens.length !== students.length) {
+          setStringInputError(`Chuỗi có ${tokens.length} điểm, nhưng lớp có đúng ${students.length} học sinh theo STT`);
+          return;
+        }
+
+        const scores = [];
+        for (let i = 0; i < tokens.length; i++) {
+          const val = parseFloat(tokens[i]);
+          if (isNaN(val) || val < 0 || val > 10) {
+            setStringInputError(`Điểm STT ${i + 1} (${tokens[i]}) không hợp lệ (phải từ 0 đến 10)`);
+            return;
+          }
+          scores.push(round1(val));
+        }
+
+        setParsedPreviewScores(scores);
+      };
+
+      const handleSaveScoreString = async () => {
+        if (!parsedPreviewScores || !activeColumnForInput) return;
+        try {
+          const db = firebase.firestore();
+          const batch = db.batch();
+          const now = Date.now();
+
+          students.forEach((st, idx) => {
+            const sc = parsedPreviewScores[idx];
+            const entryId = `${selectedClassId}_${st.id}_${activeColumnForInput.id}`;
+            const entryRef = db.collection('scoreEntries').doc(entryId);
+
+            batch.set(entryRef, {
+              id: entryId,
+              classId: selectedClassId,
+              studentId: st.id,
+              studentCode: st.studentCode,
+              scoreColumnId: activeColumnForInput.id,
+              scoreType: activeColumnForInput.type,
+              semester: activeColumnForInput.semester || semesterSetting.semester,
+              score: sc,
+              updatedAt: now,
+              createdBy: currentUser.email
+            });
+
+            // Ghi lịch sử
+            const hRef = db.collection('scoreHistory').doc();
+            batch.set(hRef, {
+              id: hRef.id,
+              scoreEntryId: entryId,
+              classId: selectedClassId,
+              studentId: st.id,
+              studentCode: st.studentCode,
+              semester: activeColumnForInput.semester || semesterSetting.semester,
+              scoreType: activeColumnForInput.type,
+              scoreColumnName: activeColumnForInput.name,
+              newScore: sc,
+              participationStatus: 'CO_THAM_GIA',
+              modifiedBy: currentUser.email,
+              timestamp: now
+            });
+          });
+
+          await batch.commit();
+          alert('Đã lưu toàn bộ điểm vào hệ thống!');
+          setStringInputModal(false);
+          setRawScoreString('');
+          setParsedPreviewScores(null);
+          fetchClassData(selectedClassId);
+        } catch (e) {
+          alert('Lỗi lưu điểm chuỗi: ' + e.message);
+        }
+      };
+
+      // TÍNH NĂNG RANDOM HỌC SINH CỦA LỚP
+      const handleRunRandomStudent = async () => {
+        if (!randomClassId) {
+          alert('Vui lòng chọn lớp học');
+          return;
+        }
+
+        const db = firebase.firestore();
+        const snap = await db.collection('students').where('classId', '==', randomClassId).get();
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+
+        if (list.length === 0) {
+          alert('Lớp học này chưa có học sinh nào');
+          setRandomResults([]);
+          return;
+        }
+
+        const count = Math.min(Math.max(1, parseInt(randomQty) || 1), list.length);
+        const shuffled = [...list];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+
+        setRandomResults(shuffled.slice(0, count));
+      };
+
+      // TÍNH TOÁN BẢNG TỔNG HỢP VÀ CÔNG THỨC TBHK/TBCN
+      const tableCalculations = useMemo(() => {
+        const curClass = classes.find(c => c.id === selectedClassId);
+        const hasSpecial = curClass ? curClass.hasSpecialTopic : true;
 
         return students.map(student => {
           const studentScores = scoreEntries.filter(e => e.studentId === student.id);
-          
-          // Điểm quy đổi
-          const converted = {};
+
+          // Cột quy đổi
+          const convMap = {};
           conversionColumns.forEach(cc => {
-            const mappings = conversionMappings.filter(m => m.conversionColumnId === cc.id);
-            if (mappings.length === 0) {
-              converted[cc.id] = null;
+            const maps = conversionMappings.filter(m => m.conversionColumnId === cc.id);
+            if (maps.length === 0) {
+              convMap[cc.id] = null;
               return;
             }
             let sum = 0;
             let totalW = 0;
-            mappings.forEach(m => {
+            maps.forEach(m => {
               const ent = studentScores.find(e => e.scoreColumnId === m.scoreColumnId);
               if (ent && ent.score !== null && !isNaN(ent.score)) {
                 sum += ent.score * (m.weight / 100);
                 totalW += m.weight;
               }
             });
-            converted[cc.id] = totalW > 0 ? round1(sum / (totalW / 100)) : null;
+            convMap[cc.id] = totalW > 0 ? round1(sum / (totalW / 100)) : null;
           });
 
-          // Lấy điểm Giữa kỳ & Cuối kỳ của học kỳ hiện tại
-          const midEntry = studentScores.find(e => e.scoreType === 'GIUA_KY' && e.semester === semesterSetting.semester);
-          const finalEntry = studentScores.find(e => e.scoreType === 'CUOI_KY' && e.semester === semesterSetting.semester);
-          const midtermScore = midEntry && midEntry.score !== null ? midEntry.score : null;
-          const finalScore = finalEntry && finalEntry.score !== null ? finalEntry.score : null;
+          // Điểm giữa kỳ và cuối kỳ
+          const midE = studentScores.find(e => e.scoreType === 'GIUA_KY' && e.semester === semesterSetting.semester);
+          const finE = studentScores.find(e => e.scoreType === 'CUOI_KY' && e.semester === semesterSetting.semester);
+          const midterm = midE && midE.score !== null ? midE.score : null;
+          const finalScore = finE && finE.score !== null ? finE.score : null;
 
-          // Lọc danh sách cột thường xuyên hợp lệ để tính TBHK
-          const regularValidScores = [];
+          // Cột thường xuyên đưa vào trung bình
+          const validRegular = [];
           conversionColumns.forEach(cc => {
             if (cc.scoreType === 'CHUYEN_DE') {
-              if (hasSpecial && semesterSetting.calculateSpecialTopic && converted[cc.id] !== null) {
-                regularValidScores.push(converted[cc.id]);
+              if (hasSpecial && semesterSetting.calculateSpecialTopic && convMap[cc.id] !== null) {
+                validRegular.push(convMap[cc.id]);
               }
-            } else if (converted[cc.id] !== null) {
-              regularValidScores.push(converted[cc.id]);
+            } else if (convMap[cc.id] !== null) {
+              validRegular.push(convMap[cc.id]);
             }
           });
 
-          // Công thức TBHK: (Tổng TX quy đổi + GK*2 + CK*3) / (Số cột TX + 5)
+          // Công thức TBHK: (Tổng TX + GK*2 + CK*3) / (Số TX + 5)
           let tbhk = null;
-          if (midtermScore !== null && finalScore !== null && regularValidScores.length > 0) {
-            const sumReg = regularValidScores.reduce((a, b) => a + b, 0);
-            tbhk = round2((sumReg + midtermScore * 2 + finalScore * 3) / (regularValidScores.length + 5));
+          if (midterm !== null && finalScore !== null && validRegular.length > 0) {
+            const sumReg = validRegular.reduce((a, b) => a + b, 0);
+            tbhk = round2((sumReg + midterm * 2 + finalScore * 3) / (validRegular.length + 5));
           }
 
-          // Công thức TBCN: (TBHK1 + TBHK2 * 2) / 3
+          // Công thức TBCN tại HK2: (TBHK1 + TBHK2 * 2) / 3
           let tbcn = null;
           if (semesterSetting.semester === 'HK2') {
-            // Giả lập điểm HK1 từ lịch sử hoặc bản ghi lưu
-            const hk1Entry = studentScores.find(e => e.semester === 'HK1' && e.scoreType === 'CUOI_KY');
-            const fakeTbhk1 = hk1Entry && hk1Entry.score !== null ? hk1Entry.score : tbhk;
-            if (fakeTbhk1 !== null && tbhk !== null) {
-              tbcn = round2((fakeTbhk1 + tbhk * 2) / 3);
+            const hk1Mid = studentScores.find(e => e.semester === 'HK1' && e.scoreType === 'CUOI_KY');
+            const fakeHk1 = hk1Mid && hk1Mid.score !== null ? hk1Mid.score : tbhk;
+            if (fakeHk1 !== null && tbhk !== null) {
+              tbcn = round2((fakeHk1 + tbhk * 2) / 3);
             }
           }
 
@@ -463,8 +560,8 @@
             orderNumber: student.orderNumber,
             studentCode: student.studentCode,
             fullName: student.fullName,
-            converted,
-            midtermScore,
+            convMap,
+            midterm,
             finalScore,
             tbhk,
             tbcn
@@ -472,32 +569,28 @@
         });
       }, [students, scoreEntries, conversionColumns, conversionMappings, semesterSetting, classes, selectedClassId]);
 
-      // XUẤT EXCEL
-      const handleConfirmExportExcel = () => {
+      // XUẤT FILE EXCEL
+      const handleDownloadExcel = () => {
         const curClass = classes.find(c => c.id === selectedClassId);
         const headers = ['STT', 'Mã HS', 'Họ và tên'];
         conversionColumns.forEach(c => headers.push(c.name));
         headers.push('Giữa kỳ (x2)', 'Cuối kỳ (x3)', 'TBHK');
         if (semesterSetting.semester === 'HK2') headers.push('TBCN');
 
-        const rows = calculatedTableData.map((st, idx) => {
+        const rows = tableCalculations.map((st, idx) => {
           const r = [st.orderNumber || (idx + 1), st.studentCode, st.fullName];
-          conversionColumns.forEach(c => r.push(formatScore(st.converted[c.id])));
-          r.push(formatScore(st.midtermScore), formatScore(st.finalScore), formatScore(st.tbhk));
+          conversionColumns.forEach(c => r.push(formatScore(st.convMap[c.id])));
+          r.push(formatScore(st.midterm), formatScore(st.finalScore), formatScore(st.tbhk));
           if (semesterSetting.semester === 'HK2') r.push(formatScore(st.tbcn));
           return r;
         });
 
         const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, `Diem_${semesterSetting.semester}`);
+        XLSX.utils.book_append_sheet(wb, ws, `BangDiem_${semesterSetting.semester}`);
         XLSX.writeFile(wb, `BangDiem_${curClass ? curClass.name : 'Lop'}_${semesterSetting.semester}.xlsx`);
         setExcelPreviewOpen(false);
       };
-
-      if (authChecking) {
-        return <div style={{ padding: 40, textAlign: 'center', fontWeight: 'bold' }}>Đang khởi tạo kết nối an toàn với Firebase...</div>;
-      }
 
       return (
         <div>
@@ -505,112 +598,162 @@
           <header>
             <h1>QUẢN LÝ LỚP HỌC & ĐIỂM SỐ</h1>
             <div className="header-actions">
+              <button className="btn btn-sm btn-secondary" onClick={() => setConfigModal(true)}>Cấu hình Firebase</button>
               {currentUser ? (
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.85rem' }}>{currentUser.email} ({userRole})</span>
+                  <span style={{ fontSize: '0.85rem' }}>{currentUser.email}</span>
                   <button className="btn btn-sm btn-danger" onClick={handleLogout}>Đăng xuất</button>
                 </div>
               ) : (
-                <span style={{ fontSize: '0.85rem' }}>Chế độ xem khách / Tra cứu</span>
+                <button className="btn btn-sm btn-success" onClick={() => setLoginModalOpen(true)}>Đăng nhập Giáo Viên</button>
               )}
             </div>
           </header>
 
-          {/* Cấu hình học kỳ và bật/tắt chuyên đề */}
-          <div style={{ background: '#e2e8f0', padding: '8px 16px', display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>Học kỳ hoạt động:</span>
-              <button 
-                className={`btn btn-sm ${semesterSetting.semester === 'HK1' ? 'btn-primary' : 'btn-secondary'}`}
-                onClick={() => handleSaveSemesterConfig('HK1', semesterSetting.calculateSpecialTopic)}
-              >
-                Học kỳ 1
-              </button>
-              <button 
-                className={`btn btn-sm ${semesterSetting.semester === 'HK2' ? 'btn-primary' : 'btn-secondary'}`}
-                onClick={() => handleSaveSemesterConfig('HK2', semesterSetting.calculateSpecialTopic)}
-              >
-                Học kỳ 2
-              </button>
+          {/* THANH ĐIỀU HƯỚNG: KHÁCH CHỈ THẤY DUY NHẤT TRA CỨU */}
+          {currentUser && (
+            <div>
+              <div style={{ background: '#e2e8f0', padding: '8px 16px', display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>Học kỳ hoạt động:</span>
+                  <button 
+                    className={`btn btn-sm ${semesterSetting.semester === 'HK1' ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => handleSaveSemesterSetting('HK1', semesterSetting.calculateSpecialTopic)}
+                  >
+                    Học kỳ 1
+                  </button>
+                  <button 
+                    className={`btn btn-sm ${semesterSetting.semester === 'HK2' ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => handleSaveSemesterSetting('HK2', semesterSetting.calculateSpecialTopic)}
+                  >
+                    Học kỳ 2
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>Tính chuyên đề trong kỳ:</span>
+                  <button 
+                    className={`btn btn-sm ${semesterSetting.calculateSpecialTopic ? 'btn-success' : 'btn-secondary'}`}
+                    onClick={() => handleSaveSemesterSetting(semesterSetting.semester, true)}
+                  >
+                    BẬT
+                  </button>
+                  <button 
+                    className={`btn btn-sm ${!semesterSetting.calculateSpecialTopic ? 'btn-warning' : 'btn-secondary'}`}
+                    onClick={() => handleSaveSemesterSetting(semesterSetting.semester, false)}
+                  >
+                    TẮT
+                  </button>
+                </div>
+              </div>
+
+              <div className="nav-bar">
+                <button className={currentTab === 'DASHBOARD' ? 'active' : ''} onClick={() => setCurrentTab('DASHBOARD')}>Bảng điều khiển</button>
+                <button className={currentTab === 'RANDOM' ? 'active' : ''} onClick={() => setCurrentTab('RANDOM')}>Random học sinh</button>
+                <button className={currentTab === 'SCORES' ? 'active' : ''} onClick={() => setCurrentTab('SCORES')}>Bảng điểm & Cột điểm</button>
+                <button className={currentTab === 'GROUPS' ? 'active' : ''} onClick={() => setCurrentTab('GROUPS')}>Nhóm & Snapshot điểm</button>
+                <button className={currentTab === 'CLASSES' ? 'active' : ''} onClick={() => setCurrentTab('CLASSES')}>Quản lý lớp & HS</button>
+                <button className={currentTab === 'LOOKUP' ? 'active' : ''} onClick={() => setCurrentTab('LOOKUP')}>Tra cứu điểm</button>
+              </div>
             </div>
+          )}
 
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>Tính điểm chuyên đề học kỳ này:</span>
-              <button 
-                className={`btn btn-sm ${semesterSetting.calculateSpecialTopic ? 'btn-success' : 'btn-secondary'}`}
-                onClick={() => handleSaveSemesterConfig(semesterSetting.semester, true)}
-              >
-                Có
-              </button>
-              <button 
-                className={`btn btn-sm ${!semesterSetting.calculateSpecialTopic ? 'btn-warning' : 'btn-secondary'}`}
-                onClick={() => handleSaveSemesterConfig(semesterSetting.semester, false)}
-              >
-                Không
-              </button>
-            </div>
-          </div>
-
-          {/* Navigation Bar */}
-          <nav>
-            <button className={currentTab === 'DASHBOARD' ? 'active' : ''} onClick={() => setCurrentTab('DASHBOARD')}>Bảng điều khiển</button>
-            <button className={currentTab === 'RANDOM' ? 'active' : ''} onClick={() => setCurrentTab('RANDOM')}>Random học sinh</button>
-            <button className={currentTab === 'SCORES' ? 'active' : ''} onClick={() => setCurrentTab('SCORES')}>Bảng điểm & Cột điểm</button>
-            <button className={currentTab === 'GROUPS' ? 'active' : ''} onClick={() => setCurrentTab('GROUPS')}>Nhóm & Điểm nhóm</button>
-            <button className={currentTab === 'CLASSES' ? 'active' : ''} onClick={() => setCurrentTab('CLASSES')}>Quản lý lớp & HS</button>
-            <button className={currentTab === 'LOOKUP' ? 'active' : ''} onClick={() => setCurrentTab('LOOKUP')}>Tra cứu công khai</button>
-            {!currentUser && <button className={currentTab === 'LOGIN' ? 'active' : ''} onClick={() => setCurrentTab('LOGIN')}>Đăng nhập GV</button>}
-          </nav>
-
+          {/* NỘI DUNG CHÍNH */}
           <div className="container">
-            {/* 1. TÍNH NĂNG RANDOM HỌC SINH */}
-            {currentTab === 'RANDOM' && (
+
+            {/* KHI CHƯA ĐĂNG NHẬP: CHỈ HIỂN THỊ DUY NHẤT GIAO DIỆN TRA CỨU */}
+            {!currentUser && (
+              <div className="card" style={{ maxWidth: 880, margin: '20px auto' }}>
+                <div className="card-title" style={{ fontSize: '1.2rem', textAlign: 'center' }}>
+                  TRA CỨU KẾT QUẢ ĐIỂM & LỊCH SỬ HỌC TẬP
+                </div>
+                <p style={{ textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: 20 }}>
+                  Học sinh và phụ huynh nhập đúng Mã số học sinh để tra cứu kết quả chi tiết.
+                </p>
+                <PublicLookupView firebaseReady={firebaseReady} />
+              </div>
+            )}
+
+            {/* KHI ĐÃ ĐĂNG NHẬP: HIỂN THỊ ĐẦY ĐỦ CÁC TAB CHỨC NĂNG */}
+            {currentUser && currentTab === 'DASHBOARD' && (
+              <div>
+                <div className="grid-4">
+                  <div className="card" style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Tổng số lớp</div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--primary)' }}>{classes.length}</div>
+                  </div>
+                  <div className="card" style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Số HS lớp hiện tại</div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--primary)' }}>{students.length}</div>
+                  </div>
+                  <div className="card" style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Học kỳ làm việc</div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--success)' }}>{semesterSetting.semester}</div>
+                  </div>
+                  <div className="card" style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Điểm chuyên đề</div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: 800, color: semesterSetting.calculateSpecialTopic ? 'var(--success)' : 'var(--danger)' }}>
+                      {semesterSetting.calculateSpecialTopic ? 'ĐANG TÍNH' : 'KHÔNG TÍNH'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card">
+                  <div className="card-title">HỆ THỐNG ĐÃ SẴN SÀNG</div>
+                  <p style={{ lineHeight: 1.6, fontSize: '0.9rem' }}>
+                    Tài khoản <strong>{currentUser.email}</strong> đang có toàn quyền quản trị: Thêm/Sửa/Xóa lớp, tạo nhóm với snapshot bất biến, chuyển đổi loại cột điểm không mất dữ liệu, random học sinh không trùng lặp và xuất bảng điểm Excel kèm preview.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {currentUser && currentTab === 'RANDOM' && (
               <div className="card">
-                <div className="card-title">RANDOM HỌC SINH THEO LỚP</div>
+                <div className="card-title">RANDOM HỌC SINH THEO LỚP HỌC</div>
                 <div className="grid-3" style={{ alignItems: 'flex-end', marginBottom: 20 }}>
                   <div className="form-group">
                     <label>Chọn lớp học:</label>
                     <select 
                       className="form-control" 
-                      value={randomSelectedClassId} 
-                      onChange={(e) => setRandomSelectedClassId(e.target.value)}
+                      value={randomClassId} 
+                      onChange={(e) => setRandomClassId(e.target.value)}
                     >
                       {classes.map(c => (
-                        <option key={c.id} value={c.id}>{c.name} {c.hasSpecialTopic ? '(Có chuyên đề)' : ''}</option>
+                        <option key={c.id} value={c.id}>{c.name}</option>
                       ))}
                     </select>
                   </div>
 
                   <div className="form-group">
-                    <label>Số lượng học sinh cần chọn ngẫu nhiên:</label>
+                    <label>Số lượng học sinh cần random:</label>
                     <input 
                       type="number" 
                       min="1" 
                       max="100" 
                       className="form-control" 
-                      value={randomCount} 
-                      onChange={(e) => setRandomCount(e.target.value)}
+                      value={randomQty} 
+                      onChange={(e) => setRandomQty(e.target.value)}
                     />
                   </div>
 
                   <div className="form-group">
-                    <button className="btn btn-primary" style={{ width: '100%' }} onClick={handleExecuteRandom}>
+                    <button className="btn btn-primary" style={{ width: '100%' }} onClick={handleRunRandomStudent}>
                       Bắt đầu chọn ngẫu nhiên
                     </button>
                   </div>
                 </div>
 
-                {randomResultList.length > 0 && (
+                {randomResults.length > 0 && (
                   <div>
-                    <h3 style={{ fontSize: '1rem', marginBottom: 12, color: 'var(--success)' }}>
-                      KẾT QUẢ RANDOM ({randomResultList.length} HỌC SINH):
+                    <h3 style={{ fontSize: '0.95rem', marginBottom: 12, color: 'var(--success)' }}>
+                      DANH SÁCH {randomResults.length} HỌC SINH ĐƯỢC CHỌN NGẪU NHIÊN:
                     </h3>
                     <div className="grid-3">
-                      {randomResultList.map((st, idx) => (
-                        <div key={st.id} className="random-badge-card">
-                          <div className="random-badge-number">STT: {st.orderNumber}</div>
-                          <div className="random-badge-name">{st.fullName}</div>
-                          <div className="random-badge-code">Mã HS: {st.studentCode}</div>
+                      {randomResults.map(st => (
+                        <div key={st.id} className="random-box">
+                          <div className="random-num">STT: {st.orderNumber}</div>
+                          <div className="random-name">{st.fullName}</div>
+                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Mã HS: {st.studentCode}</div>
                         </div>
                       ))}
                     </div>
@@ -619,40 +762,72 @@
               </div>
             )}
 
-            {/* 2. BẢNG ĐIỂM, CHUYỂN CỘT ĐIỂM & XUẤT EXCEL */}
-            {currentTab === 'SCORES' && (
+            {currentUser && currentTab === 'SCORES' && (
               <div>
                 <div className="card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                      <label style={{ fontWeight: 600 }}>Lớp đang xem:</label>
-                      <select className="form-control" style={{ width: 160 }} value={selectedClassId} onChange={(e) => setSelectedClassId(e.target.value)}>
+                      <label style={{ fontWeight: 600 }}>Lớp đang chọn:</label>
+                      <select className="form-control" style={{ width: 180 }} value={selectedClassId} onChange={(e) => setSelectedClassId(e.target.value)}>
                         {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                       </select>
                     </div>
 
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button className="btn btn-primary btn-sm" onClick={() => setExcelPreviewOpen(true)}>Xem trước & Xuất Excel</button>
-                    </div>
+                    <button className="btn btn-primary btn-sm" onClick={() => setExcelPreviewOpen(true)}>
+                      Xem trước & Xuất Excel
+                    </button>
                   </div>
                 </div>
 
-                {/* Quản lý danh sách cột điểm gốc và chức năng CHUYỂN LOẠI CỘT */}
+                {/* Tạo cột điểm mới */}
                 <div className="card">
-                  <div className="card-title">CÁC CỘT ĐIỂM GỐC CỦA LỚP</div>
+                  <div className="card-title">TẠO CỘT ĐIỂM MỚI</div>
+                  <form onSubmit={handleCreateColumn} className="grid-3" style={{ alignItems: 'flex-end' }}>
+                    <div className="form-group">
+                      <label>Tên cột điểm:</label>
+                      <input 
+                        type="text" 
+                        required 
+                        className="form-control" 
+                        placeholder="VD: Kiểm tra 15p lần 1" 
+                        value={newColName} 
+                        onChange={(e) => setNewColName(e.target.value)} 
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Loại điểm:</label>
+                      <select className="form-control" value={newColType} onChange={(e) => setNewColType(e.target.value)}>
+                        <option value="THUONG_XUYEN_BAO_TRUOC">Thường xuyên báo trước</option>
+                        <option value="THUONG_XUYEN_DOT_XUAT">Thường xuyên đột xuất</option>
+                        <option value="THUONG_XUYEN_CA_NHAN">Thường xuyên cá nhân</option>
+                        <option value="DIEM_NHOM">Điểm nhóm</option>
+                        <option value="CHUYEN_DE">Chuyên đề</option>
+                        <option value="GIUA_KY">Giữa kỳ</option>
+                        <option value="CUOI_KY">Cuối kỳ</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <button type="submit" className="btn btn-success" style={{ width: '100%' }}>Thêm cột điểm</button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Danh sách cột điểm & Nút Chuyển loại cột */}
+                <div className="card">
+                  <div className="card-title">DANH SÁCH CỘT ĐIỂM CỦA LỚP</div>
                   <table>
                     <thead>
                       <tr>
                         <th>Tên cột</th>
                         <th>Loại điểm</th>
                         <th>Học kỳ</th>
-                        <th>Số bản ghi điểm</th>
+                        <th>Đã nhập</th>
                         <th>Hành động</th>
                       </tr>
                     </thead>
                     <tbody>
                       {scoreColumns.length === 0 ? (
-                        <tr><td colSpan={5} style={{ textAlign: 'center' }}>Chưa có cột điểm nào</td></tr>
+                        <tr><td colSpan={5} style={{ textAlign: 'center' }}>Lớp này chưa tạo cột điểm nào</td></tr>
                       ) : (
                         scoreColumns.map(col => {
                           const count = scoreEntries.filter(e => e.scoreColumnId === col.id && e.score !== null).length;
@@ -661,17 +836,27 @@
                               <td style={{ fontWeight: 600 }}>{col.name}</td>
                               <td><span className="badge badge-primary">{col.type}</span></td>
                               <td>{col.semester}</td>
-                              <td>{count} học sinh đã có điểm</td>
-                              <td>
+                              <td>{count}/{students.length} HS</td>
+                              <td style={{ display: 'flex', gap: 6 }}>
+                                <button 
+                                  className="btn btn-primary btn-sm"
+                                  onClick={() => {
+                                    setActiveColumnForInput(col);
+                                    setRawScoreString('');
+                                    setParsedPreviewScores(null);
+                                    setStringInputModal(true);
+                                  }}
+                                >
+                                  Nhập điểm chuỗi
+                                </button>
                                 <button 
                                   className="btn btn-warning btn-sm"
                                   onClick={() => {
-                                    setSelectedColToMove(col);
+                                    setColToMove(col);
                                     setTargetScoreType(col.type);
-                                    setMoveColModalOpen(true);
                                   }}
                                 >
-                                  Chuyển sang loại điểm khác
+                                  Chuyển loại cột
                                 </button>
                               </td>
                             </tr>
@@ -692,30 +877,30 @@
                           <th>STT</th>
                           <th>Mã HS</th>
                           <th>Họ và tên</th>
-                          {conversionColumns.map(cc => <th key={cc.id}>{cc.name} (Quy đổi)</th>)}
-                          <th>Giữa kỳ (x2)</th>
-                          <th>Cuối kỳ (x3)</th>
+                          {conversionColumns.map(c => <th key={c.id}>{c.name}</th>)}
+                          <th>Giữa kỳ</th>
+                          <th>Cuối kỳ</th>
                           <th style={{ backgroundColor: '#fef3c7' }}>TBHK</th>
                           {semesterSetting.semester === 'HK2' && <th style={{ backgroundColor: '#dcfce7' }}>TBCN</th>}
                         </tr>
                       </thead>
                       <tbody>
-                        {calculatedTableData.map(st => (
+                        {tableCalculations.map(st => (
                           <tr key={st.studentId}>
                             <td>{st.orderNumber}</td>
                             <td style={{ fontWeight: 600 }}>{st.studentCode}</td>
                             <td>{st.fullName}</td>
-                            {conversionColumns.map(cc => (
-                              <td key={cc.id}>{formatScore(st.converted[cc.id])}</td>
+                            {conversionColumns.map(c => (
+                              <td key={c.id}>{formatScore(st.convMap[c.id])}</td>
                             ))}
-                            <td>{formatScore(st.midtermScore)}</td>
+                            <td>{formatScore(st.midterm)}</td>
                             <td>{formatScore(st.finalScore)}</td>
                             <td style={{ fontWeight: 700, backgroundColor: '#fef3c7' }}>
-                              {st.tbhk !== null ? formatScore(st.tbhk) : 'Chưa có dữ liệu'}
+                              {st.tbhk !== null ? formatScore(st.tbhk) : 'Chưa đủ'}
                             </td>
                             {semesterSetting.semester === 'HK2' && (
                               <td style={{ fontWeight: 700, backgroundColor: '#dcfce7' }}>
-                                {st.tbcn !== null ? formatScore(st.tbcn) : 'Chưa đủ HK'}
+                                {st.tbcn !== null ? formatScore(st.tbcn) : 'Chưa đủ'}
                               </td>
                             )}
                           </tr>
@@ -727,28 +912,27 @@
               </div>
             )}
 
-            {/* 3. QUẢN LÝ NHÓM & BẢO TOÀN ĐIỂM SNAPSHOT */}
-            {currentTab === 'GROUPS' && (
+            {currentUser && currentTab === 'GROUPS' && (
               <div className="card">
-                <div className="card-title">QUẢN LÝ NHÓM & QUY TẮC BẢO TOÀN ĐIỂM LỊCH SỬ</div>
+                <div className="card-title">QUẢN LÝ NHÓM & BẢO TOÀN LỊCH SỬ ĐIỂM NHÓM</div>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 14 }}>
                   Khi học sinh chuyển nhóm hoặc giải tán nhóm, toàn bộ điểm số cũ kèm trạng thái tham gia đã ghi nhận sẽ giữ nguyên vẹn thông qua bản snapshot.
                 </p>
                 <div className="grid-2">
                   <div>
-                    <h4 style={{ marginBottom: 8 }}>Danh sách nhóm hiện tại</h4>
+                    <h4 style={{ marginBottom: 8 }}>Danh sách nhóm ({classes.find(c => c.id === selectedClassId)?.name})</h4>
                     {groups.length === 0 ? (
-                      <div>Chưa có nhóm nào được tạo trong lớp này</div>
+                      <div>Chưa có nhóm nào trong lớp</div>
                     ) : (
                       groups.map(g => (
                         <div key={g.id} style={{ border: '1px solid var(--border)', padding: 10, borderRadius: 6, marginBottom: 8 }}>
-                          <strong>{g.name}</strong> ({g.memberStudentIds ? g.memberStudentIds.length : 0} thành viên)
+                          <strong>{g.name}</strong> ({g.memberStudentIds?.length || 0} thành viên)
                         </div>
                       ))
                     )}
                   </div>
                   <div>
-                    <h4 style={{ marginBottom: 8 }}>Lịch sử điểm nhóm gần nhất</h4>
+                    <h4 style={{ marginBottom: 8 }}>Lịch sử snapshot điểm nhóm</h4>
                     <table>
                       <thead>
                         <tr>
@@ -756,7 +940,7 @@
                           <th>Học sinh</th>
                           <th>Nhóm lúc nhập</th>
                           <th>Điểm</th>
-                          <th>Ghi chú</th>
+                          <th>Trạng thái</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -766,7 +950,7 @@
                             <td>{h.studentCode}</td>
                             <td>{h.groupSnapshot ? h.groupSnapshot.groupName : '-'}</td>
                             <td style={{ fontWeight: 600 }}>{formatScore(h.newScore)}</td>
-                            <td>{h.participationStatus === 'KHONG_THAM_GIA' ? 'Vắng (0 điểm)' : 'Có tham gia'}</td>
+                            <td>{h.participationStatus === 'KHONG_THAM_GIA' ? 'Vắng (0đ)' : 'Có tham gia'}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -776,18 +960,9 @@
               </div>
             )}
 
-            {/* 4. TRA CỨU CÔNG KHAI KHÔNG CẦN ĐĂNG NHẬP */}
-            {currentTab === 'LOOKUP' && (
+            {currentUser && currentTab === 'CLASSES' && (
               <div className="card">
-                <div className="card-title">TRA CỨU KẾT QUẢ HỌC TẬP VÀ LỊCH SỬ ĐIỂM</div>
-                <PublicLookupComponent />
-              </div>
-            )}
-
-            {/* 5. QUẢN LÝ LỚP VÀ HỌC SINH */}
-            {currentTab === 'CLASSES' && (
-              <div className="card">
-                <div className="card-title">DANH SÁCH HỌC SINH LỚP ĐANG CHỌN</div>
+                <div className="card-title">DANH SÁCH LỚP HỌC & HỌC SINH</div>
                 <div style={{ marginBottom: 12 }}>
                   <select className="form-control" style={{ width: 220 }} value={selectedClassId} onChange={(e) => setSelectedClassId(e.target.value)}>
                     {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -814,141 +989,222 @@
               </div>
             )}
 
-            {/* 6. BẢNG ĐIỀU KHIỂN DASHBOARD */}
-            {currentTab === 'DASHBOARD' && (
-              <div>
-                <div className="grid-4">
-                  <div className="card" style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Tổng số lớp</div>
-                    <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--primary)' }}>{classes.length}</div>
-                  </div>
-                  <div className="card" style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Số HS lớp hiện tại</div>
-                    <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--primary)' }}>{students.length}</div>
-                  </div>
-                  <div className="card" style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Học kỳ hiện tại</div>
-                    <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--success)' }}>{semesterSetting.semester}</div>
-                  </div>
-                  <div className="card" style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Tính chuyên đề</div>
-                    <div style={{ fontSize: '1.8rem', fontWeight: 800, color: semesterSetting.calculateSpecialTopic ? 'var(--success)' : 'var(--danger)' }}>
-                      {semesterSetting.calculateSpecialTopic ? 'BẬT' : 'TẮT'}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="card">
-                  <div className="card-title">TRẠNG THÁI BẢO TOÀN VÀ HỆ THỐNG</div>
-                  <p style={{ lineHeight: 1.6, fontSize: '0.9rem' }}>
-                    Hệ thống đang hoạt động với cấu hình bảo toàn dữ liệu lịch sử. Điểm chuyên đề được lưu độc lập xuyên năm và chỉ tham gia công thức TBHK khi được kích hoạt. Điểm nhóm được đóng gói snapshot nguyên vẹn tại thời điểm ghi nhận.
-                  </p>
-                </div>
+            {currentUser && currentTab === 'LOOKUP' && (
+              <div className="card">
+                <div className="card-title">TRA CỨU NHANH KẾT QUẢ HỌC TẬP</div>
+                <PublicLookupView firebaseReady={firebaseReady} />
               </div>
             )}
 
-            {/* 7. ĐĂNG NHẬP */}
-            {currentTab === 'LOGIN' && !currentUser && (
-              <div className="card" style={{ maxWidth: 420, margin: '40px auto' }}>
-                <div className="card-title">ĐĂNG NHẬP GIÁO VIÊN / QUẢN TRỊ</div>
+          </div>
+
+          {/* MODAL: ĐĂNG NHẬP GIÁO VIÊN */}
+          {loginModalOpen && (
+            <div className="modal-overlay">
+              <div className="modal-box" style={{ maxWidth: 400 }}>
+                <div className="modal-header">
+                  <h3>Đăng nhập Giáo Viên</h3>
+                  <button className="modal-close" onClick={() => setLoginModalOpen(false)}>×</button>
+                </div>
                 {loginError && <div style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: 12 }}>{loginError}</div>}
-                <form onSubmit={handleLogin}>
+                <form onSubmit={handleLoginSubmit}>
                   <div className="form-group">
-                    <label>Email:</label>
-                    <input type="email" required className="form-control" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
+                    <label>Email tài khoản:</label>
+                    <input 
+                      type="email" 
+                      required 
+                      className="form-control" 
+                      placeholder="teacher@school.edu.vn" 
+                      value={loginEmail} 
+                      onChange={(e) => setLoginEmail(e.target.value)} 
+                    />
                   </div>
                   <div className="form-group">
                     <label>Mật khẩu:</label>
-                    <input type="password" required className="form-control" value={loginPass} onChange={(e) => setLoginPass(e.target.value)} />
+                    <input 
+                      type="password" 
+                      required 
+                      className="form-control" 
+                      placeholder="••••••••" 
+                      value={loginPass} 
+                      onChange={(e) => setLoginPass(e.target.value)} 
+                    />
                   </div>
-                  <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Đăng nhập</button>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
+                    <button type="button" className="btn btn-secondary" onClick={() => setLoginModalOpen(false)}>Hủy</button>
+                    <button type="submit" className="btn btn-primary" disabled={loginLoading}>
+                      {loginLoading ? 'Đang xác thực...' : 'Đăng nhập'}
+                    </button>
+                  </div>
                 </form>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* MODAL: CHUYỂN CỘT ĐIỂM SANG LOẠI KHÁC */}
-          {moveColModalOpen && selectedColToMove && (
+          {colToMove && (
             <div className="modal-overlay">
-              <div className="modal-box" style={{ maxWidth: 500 }}>
+              <div className="modal-box" style={{ maxWidth: 480 }}>
                 <div className="modal-header">
                   <h3>Chuyển loại cột điểm</h3>
-                  <button className="modal-close" onClick={() => setMoveColModalOpen(false)}>×</button>
+                  <button className="modal-close" onClick={() => setColToMove(null)}>×</button>
                 </div>
                 <p style={{ fontSize: '0.9rem', marginBottom: 12 }}>
-                  Cột điểm đang chọn: <strong>{selectedColToMove.name}</strong> (Hiện tại: {selectedColToMove.type})
+                  Cột: <strong>{colToMove.name}</strong> (Hiện tại: <span className="badge badge-primary">{colToMove.type}</span>)
                 </p>
                 <div className="form-group">
-                  <label>Chọn loại điểm mới cần chuyển sang:</label>
+                  <label>Chọn loại điểm đích cần chuyển sang:</label>
                   <select 
                     className="form-control" 
                     value={targetScoreType} 
                     onChange={(e) => setTargetScoreType(e.target.value)}
                   >
-                    <option value="CHUYEN_DE">Chuyên đề</option>
-                    <option value="DIEM_NHOM">Điểm nhóm</option>
                     <option value="THUONG_XUYEN_BAO_TRUOC">Thường xuyên báo trước</option>
                     <option value="THUONG_XUYEN_DOT_XUAT">Thường xuyên đột xuất</option>
-                    <option value="THUONG_XUYEN_CA_NHAN">Thường xuyên một số cá nhân</option>
+                    <option value="THUONG_XUYEN_CA_NHAN">Thường xuyên cá nhân</option>
+                    <option value="DIEM_NHOM">Điểm nhóm</option>
+                    <option value="CHUYEN_DE">Chuyên đề</option>
                     <option value="GIUA_KY">Giữa kỳ</option>
                     <option value="CUOI_KY">Cuối kỳ</option>
                   </select>
                 </div>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 16 }}>
-                  Lưu ý: Mọi giá trị điểm đã nhập của học sinh thuộc cột này sẽ được bảo toàn nguyên vẹn.
+                  Hệ thống bảo toàn nguyên vẹn toàn bộ điểm số học sinh đã được nhập trước đó.
                 </p>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-                  <button className="btn btn-secondary" onClick={() => setMoveColModalOpen(false)}>Hủy</button>
-                  <button className="btn btn-primary" onClick={handleExecuteMoveScoreColumn}>Xác nhận chuyển</button>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                  <button className="btn btn-secondary" onClick={() => setColToMove(null)}>Hủy</button>
+                  <button className="btn btn-primary" onClick={handleExecuteChangeColumnType}>Xác nhận chuyển</button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* MODAL: XEM TRƯỚC EXCEL TRƯỚC KHI TẠO FILE */}
+          {/* MODAL: NHẬP ĐIỂM DẠNG CHUỖI CÓ PREVIEW */}
+          {stringInputModal && activeColumnForInput && (
+            <div className="modal-overlay">
+              <div className="modal-box">
+                <div className="modal-header">
+                  <h3>Nhập điểm chuỗi: {activeColumnForInput.name}</h3>
+                  <button className="modal-close" onClick={() => setStringInputModal(false)}>×</button>
+                </div>
+                <p style={{ fontSize: '0.85rem', marginBottom: 10 }}>
+                  Nhập danh sách điểm phân tách bằng dấu cách theo đúng STT của {students.length} học sinh. Ví dụ: <code>8 7.5 9 6,5</code>
+                </p>
+                <div className="form-group">
+                  <textarea 
+                    className="form-control" 
+                    rows={4} 
+                    placeholder="8 7.5 9 6,5 10..." 
+                    value={rawScoreString} 
+                    onChange={(e) => setRawScoreString(e.target.value)} 
+                  />
+                </div>
+                {stringInputError && <div style={{ color: 'var(--danger)', fontSize: '0.85rem', marginBottom: 10 }}>{stringInputError}</div>}
+                
+                <div style={{ marginBottom: 16 }}>
+                  <button type="button" className="btn btn-primary btn-sm" onClick={handlePreviewScoreString}>
+                    Kiểm tra và xem trước
+                  </button>
+                </div>
+
+                {parsedPreviewScores && (
+                  <div style={{ maxHeight: 200, overflowY: 'auto', marginBottom: 16 }}>
+                    <table>
+                      <thead>
+                        <tr><th>STT</th><th>Mã HS</th><th>Họ tên</th><th>Điểm sẽ lưu</th></tr>
+                      </thead>
+                      <tbody>
+                        {students.map((st, i) => (
+                          <tr key={st.id}>
+                            <td>{st.orderNumber}</td>
+                            <td>{st.studentCode}</td>
+                            <td>{st.fullName}</td>
+                            <td style={{ fontWeight: 700 }}>{formatScore(parsedPreviewScores[i])}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                  <button className="btn btn-secondary" onClick={() => setStringInputModal(false)}>Hủy</button>
+                  <button 
+                    className="btn btn-success" 
+                    disabled={!parsedPreviewScores} 
+                    onClick={handleSaveScoreString}
+                  >
+                    Lưu toàn bộ điểm
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL: XEM TRƯỚC EXCEL */}
           {excelPreviewOpen && (
             <div className="modal-overlay">
               <div className="modal-box">
                 <div className="modal-header">
-                  <h3>BẢN XEM TRƯỚC BẢNG ĐIỂM XUẤT EXCEL ({semesterSetting.semester})</h3>
+                  <h3>XEM TRƯỚC BẢNG ĐIỂM XUẤT EXCEL ({semesterSetting.semester})</h3>
                   <button className="modal-close" onClick={() => setExcelPreviewOpen(false)}>×</button>
                 </div>
-                <p style={{ fontSize: '0.85rem', marginBottom: 10 }}>Kiểm tra kỹ các trường điểm trước khi xác nhận tạo file.</p>
                 <div style={{ maxHeight: 380, overflowY: 'auto', marginBottom: 16 }}>
                   <table>
                     <thead>
                       <tr>
-                        <th>STT</th>
-                        <th>Mã HS</th>
-                        <th>Họ và tên</th>
-                        {conversionColumns.map(cc => <th key={cc.id}>{cc.name}</th>)}
-                        <th>Giữa kỳ</th>
-                        <th>Cuối kỳ</th>
-                        <th>TBHK</th>
+                        <th>STT</th><th>Mã HS</th><th>Họ tên</th>
+                        {conversionColumns.map(c => <th key={c.id}>{c.name}</th>)}
+                        <th>Giữa kỳ</th><th>Cuối kỳ</th><th>TBHK</th>
                         {semesterSetting.semester === 'HK2' && <th>TBCN</th>}
                       </tr>
                     </thead>
                     <tbody>
-                      {calculatedTableData.map(st => (
+                      {tableCalculations.map(st => (
                         <tr key={st.studentId}>
-                          <td>{st.orderNumber}</td>
-                          <td>{st.studentCode}</td>
-                          <td>{st.fullName}</td>
-                          {conversionColumns.map(cc => <td key={cc.id}>{formatScore(st.converted[cc.id])}</td>)}
-                          <td>{formatScore(st.midtermScore)}</td>
-                          <td>{formatScore(st.finalScore)}</td>
-                          <td style={{ fontWeight: 600 }}>{st.tbhk !== null ? formatScore(st.tbhk) : '-'}</td>
+                          <td>{st.orderNumber}</td><td>{st.studentCode}</td><td>{st.fullName}</td>
+                          {conversionColumns.map(c => <td key={c.id}>{formatScore(st.convMap[c.id])}</td>)}
+                          <td>{formatScore(st.midterm)}</td><td>{formatScore(st.finalScore)}</td>
+                          <td style={{ fontWeight: 600 }}>{formatScore(st.tbhk)}</td>
                           {semesterSetting.semester === 'HK2' && (
-                            <td style={{ fontWeight: 600 }}>{st.tbcn !== null ? formatScore(st.tbcn) : '-'}</td>
+                            <td style={{ fontWeight: 600 }}>{formatScore(st.tbcn)}</td>
                           )}
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                   <button className="btn btn-secondary" onClick={() => setExcelPreviewOpen(false)}>Quay lại chỉnh sửa</button>
-                  <button className="btn btn-success" onClick={handleConfirmExportExcel}>Xác nhận xuất Excel</button>
+                  <button className="btn btn-success" onClick={handleDownloadExcel}>Xác nhận xuất Excel</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL: THIẾT LẬP CẤU HÌNH FIREBASE */}
+          {configModal && (
+            <div className="modal-overlay">
+              <div className="modal-box" style={{ maxWidth: 520 }}>
+                <div className="modal-header">
+                  <h3>Cấu hình kết nối Firebase</h3>
+                  <button className="modal-close" onClick={() => setConfigModal(false)}>×</button>
+                </div>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 10 }}>
+                  Dán chuỗi JSON cấu hình Firebase Web SDK từ Firebase Console của bạn vào bên dưới:
+                </p>
+                <div className="form-group">
+                  <textarea 
+                    className="form-control" 
+                    rows={9} 
+                    value={customConfigText} 
+                    onChange={(e) => setCustomConfigText(e.target.value)} 
+                    style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                  <button className="btn btn-secondary" onClick={() => setConfigModal(false)}>Đóng</button>
+                  <button className="btn btn-primary" onClick={handleSaveCustomConfig}>Lưu & Khởi động lại</button>
                 </div>
               </div>
             </div>
@@ -957,47 +1213,42 @@
       );
     }
 
-    // Giao diện tra cứu công khai độc lập
-    function PublicLookupComponent() {
+    // GIAO DIỆN TRA CỨU ĐIỂM DÀNH CHO KHÁCH & HỌC SINH
+    function PublicLookupView({ firebaseReady }) {
       const [lookupCode, setLookupCode] = useState('');
       const [searching, setSearching] = useState(false);
       const [studentData, setStudentData] = useState(null);
       const [historyRows, setHistoryRows] = useState([]);
       const [msg, setMsg] = useState('');
 
-      const executeSearch = async (e) => {
+      const handleSearch = async (e) => {
         e.preventDefault();
-        if (!lookupCode.trim()) return;
+        if (!lookupCode.trim() || !firebaseReady) return;
+
         setSearching(true);
         setMsg('');
         setStudentData(null);
         setHistoryRows([]);
 
         try {
-          const sQ = window.fbOps.query(
-            window.fbOps.collection(window.fbDb, 'students'), 
-            window.fbOps.where('studentCode', '==', lookupCode.trim().toUpperCase())
-          );
-          const sSnap = await window.fbOps.getDocs(sQ);
+          const db = firebase.firestore();
+          const qCode = lookupCode.trim().toUpperCase();
 
-          if (sSnap.empty) {
-            setMsg('Không tìm thấy học sinh với mã này');
+          const stSnap = await db.collection('students').where('studentCode', '==', qCode).get();
+          if (stSnap.empty) {
+            setMsg('Không tìm thấy học sinh với mã: ' + qCode);
             setSearching(false);
             return;
           }
 
-          const st = sSnap.docs[0].data();
+          const st = stSnap.docs[0].data();
           setStudentData(st);
 
-          const hQ = window.fbOps.query(
-            window.fbOps.collection(window.fbDb, 'scoreHistory'), 
-            window.fbOps.where('studentCode', '==', lookupCode.trim().toUpperCase())
-          );
-          const hSnap = await window.fbOps.getDocs(hQ);
-          const rows = [];
-          hSnap.forEach(d => rows.push(d.data()));
-          rows.sort((a, b) => b.timestamp - a.timestamp);
-          setHistoryRows(rows);
+          const hSnap = await db.collection('scoreHistory').where('studentCode', '==', qCode).get();
+          const list = [];
+          hSnap.forEach(d => list.push(d.data()));
+          list.sort((a, b) => b.timestamp - a.timestamp);
+          setHistoryRows(list);
         } catch (err) {
           setMsg('Lỗi tra cứu: ' + err.message);
         } finally {
@@ -1007,31 +1258,32 @@
 
       return (
         <div>
-          <form onSubmit={executeSearch} style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+          <form onSubmit={handleSearch} style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
             <input 
               type="text" 
+              required 
               className="form-control" 
-              placeholder="Nhập mã học sinh tra cứu (Ví dụ: HS001)" 
+              placeholder="Nhập mã học sinh (VD: HS001)" 
               value={lookupCode} 
               onChange={(e) => setLookupCode(e.target.value)} 
-              style={{ maxWidth: 300 }}
+              style={{ maxWidth: 320 }}
             />
             <button type="submit" className="btn btn-primary" disabled={searching}>
-              {searching ? 'Đang tìm...' : 'Tra cứu ngay'}
+              {searching ? 'Đang tra cứu...' : 'Tra cứu ngay'}
             </button>
           </form>
 
-          {msg && <div style={{ color: 'var(--danger)', marginBottom: 12 }}>{msg}</div>}
+          {msg && <div style={{ color: 'var(--danger)', fontSize: '0.9rem', marginBottom: 12 }}>{msg}</div>}
 
           {studentData && (
             <div>
-              <div style={{ background: '#f8fafc', padding: 12, borderRadius: 6, marginBottom: 16 }}>
+              <div style={{ background: '#f1f5f9', padding: 14, borderRadius: 6, marginBottom: 16 }}>
                 <div><strong>Họ và tên:</strong> {studentData.fullName}</div>
                 <div><strong>Mã học sinh:</strong> {studentData.studentCode}</div>
-                <div><strong>STT trong lớp:</strong> {studentData.orderNumber}</div>
+                <div><strong>STT lớp:</strong> {studentData.orderNumber}</div>
               </div>
 
-              <h4>LỊCH SỬ ĐIỂM ĐÃ GHI NHẬN</h4>
+              <h4 style={{ fontSize: '0.95rem', marginBottom: 8 }}>LỊCH SỬ NHẬP ĐIỂM CỦA HỌC SINH</h4>
               <table>
                 <thead>
                   <tr>
@@ -1039,13 +1291,13 @@
                     <th>Học kỳ</th>
                     <th>Loại điểm</th>
                     <th>Cột điểm</th>
-                    <th>Điểm ghi nhận</th>
-                    <th>Trạng thái / Ghi chú</th>
+                    <th>Điểm</th>
+                    <th>Ghi chú</th>
                   </tr>
                 </thead>
                 <tbody>
                   {historyRows.length === 0 ? (
-                    <tr><td colSpan={6} style={{ textAlign: 'center' }}>Chưa có bản ghi điểm nào</td></tr>
+                    <tr><td colSpan={6} style={{ textAlign: 'center' }}>Chưa có bản ghi điểm nào được lưu</td></tr>
                   ) : (
                     historyRows.map((r, i) => (
                       <tr key={i}>
@@ -1053,12 +1305,12 @@
                         <td>{r.semester || '-'}</td>
                         <td>{r.scoreType || '-'}</td>
                         <td>{r.scoreColumnName || '-'}</td>
-                        <td style={{ fontWeight: 700 }}>{r.newScore !== undefined ? r.newScore.toString().replace('.', ',') : '-'}</td>
+                        <td style={{ fontWeight: 700 }}>{formatScore(r.newScore)}</td>
                         <td>
                           {r.participationStatus === 'KHONG_THAM_GIA' ? (
-                            <span style={{ color: 'red' }}>Không tham gia nhóm (0 điểm)</span>
+                            <span style={{ color: 'red' }}>Không tham gia nhóm (0đ)</span>
                           ) : (
-                            r.reason || 'Có tham gia'
+                            r.reason || 'Bình thường'
                           )}
                           {r.groupSnapshot && ` [Nhóm: ${r.groupSnapshot.groupName}]`}
                         </td>
